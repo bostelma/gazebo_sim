@@ -1,0 +1,64 @@
+[submodule "workspace/src/gz-cmake"]
+	path = workspace/src/gz-cmake
+	url = https://github.com/gazebosim/gz-cmake.git
+	branch = gz-cmake3
+[submodule "workspace/src/gz-common"]
+	path = workspace/src/gz-common
+	url = https://github.com/gazebosim/gz-common.git
+	branch = gz-common5
+[submodule "workspace/src/gz-fuel-tools"]
+	path = workspace/src/gz-fuel-tools
+	url = https://github.com/gazebosim/gz-fuel-tools.git
+	branch = gz-fuel-tools8
+[submodule "workspace/src/gz-sim"]
+	path = workspace/src/gz-sim
+	url = https://github.com/gazebosim/gz-sim.git
+	branch = gz-sim7
+[submodule "workspace/src/gz-gui"]
+	path = workspace/src/gz-gui
+	url = https://github.com/gazebosim/gz-gui.git
+	branch = gz-gui7
+[submodule "workspace/src/gz-launch"]
+	path = workspace/src/gz-launch
+	url = https://github.com/gazebosim/gz-launch.git
+	branch = gz-launch6
+[submodule "workspace/src/gz-math"]
+	path = workspace/src/gz-math
+	url = https://github.com/gazebosim/gz-math.git
+	branch = gz-math7
+[submodule "workspace/src/gz-physics"]
+	path = workspace/src/gz-physics
+	url = https://github.com/gazebosim/gz-physics.git
+	branch = gz-physics6
+[submodule "workspace/src/gz-plugin"]
+	path = workspace/src/gz-plugin
+	url = https://github.com/gazebosim/gz-plugin.git
+	branch = gz-plugin2
+[submodule "workspace/src/gz-rendering"]
+	path = workspace/src/gz-rendering
+	url = https://github.com/gazebosim/gz-rendering.git
+	branch = gz-rendering7
+[submodule "workspace/src/gz-sensors"]
+	path = workspace/src/gz-sensors
+	url = https://github.com/gazebosim/gz-sensors.git
+	branch = gz-sensors7
+[submodule "workspace/src/gz-tools"]
+	path = workspace/src/gz-tools
+	url = https://github.com/gazebosim/gz-tools.git
+	branch = gz-tools2
+[submodule "workspace/src/gz-transport"]
+	path = workspace/src/gz-transport
+	url = https://github.com/gazebosim/gz-transport.git
+	branch = gz-transport12
+[submodule "workspace/src/gz-utils"]
+	path = workspace/src/gz-utils
+	url = https://github.com/gazebosim/gz-utils.git
+	branch = gz-utils2
+[submodule "workspace/src/sdformat"]
+	path = workspace/src/sdformat
+	url = https://github.com/gazebosim/sdformat.git
+	branch = sdf13
+[submodule "workspace/src/gz-msgs"]
+	path = workspace/src/gz-msgs
+	url = https://github.com/bostelma/gz-msgs.git
+	branch = gz-msgs9
