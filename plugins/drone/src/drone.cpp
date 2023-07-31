@@ -110,7 +110,7 @@ void Drone::OnNewRGBImage(const gz::msgs::Image &imageMsg)
             frame.mutable_header()->mutable_stamp()->CopyFrom(msgTime);
             frame.mutable_pose()->CopyFrom(gz::msgs::Convert(imagePose));
             frame.mutable_rgbimage()->CopyFrom(imageMsg);
-            frame.mutable_thermalimage()->CopyFrom(*(this->rgbImage));
+            frame.mutable_thermalimage()->CopyFrom(*(this->thermalImage));
 
             // Publish frame message
             if (!this->framePub.Publish(frame)) {
