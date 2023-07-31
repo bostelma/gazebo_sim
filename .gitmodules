@@ -62,3 +62,7 @@
 	path = workspace/src/gz-msgs
 	url = https://github.com/bostelma/gz-msgs.git
 	branch = gz-msgs9
+[submodule "workspace/src/gz-python"]
+	path = workspace/src/gz-python
+	url = https://github.com/bostelma/gz-python.git
+	branch = main
