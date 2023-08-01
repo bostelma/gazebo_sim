@@ -30,6 +30,10 @@ void Forest::Configure(const gz::sim::Entity &_entity,
     if (this->generateForest) {
         // Remove previously generate models to avoid unnecessary files
         std::string meshPath = this->modelPath + "/meshes";
+        std::filesystem::path fsModelPath(meshPath);
+        if (!std::filesystem::exists(fsModelPath)) {
+            std::filesystem::create_directory(fsModelPath);
+        }
         for (const auto &entry : std::filesystem::directory_iterator(meshPath)) {
             std::filesystem::remove(entry.path());
         }
