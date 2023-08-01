@@ -46,18 +46,25 @@ void Forest::Configure(const gz::sim::Entity &_entity,
             return;
         }
 
-        modelString = this->CreateModelStr();
+        this->modelString = this->CreateModelStr();
     } else {
         // Load the model string from file
         std::string modelStrPath = this->modelPath + "/model.sdf";
         std::ifstream myFile(modelStrPath);
         std::stringstream buffer;
         buffer << myFile.rdbuf();
-        modelString = buffer.str();
+        this->modelString = buffer.str();
         myFile.close();
     }
 
-    this->SpawnModel(modelString);
+    this->SpawnModel(this->modelString);
+}
+
+void Forest::Reset(const gz::sim::UpdateInfo &_info,
+           gz::sim::EntityComponentManager &_ecm)
+{
+    std::cout << "Reset" << std::endl;
+    this->SpawnModel(this->modelString);
 }
 
 bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)

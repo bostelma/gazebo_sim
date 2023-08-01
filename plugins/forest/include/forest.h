@@ -24,7 +24,8 @@
 
 class Forest
       : public gz::sim::System,
-        public gz::sim::ISystemConfigure
+        public gz::sim::ISystemConfigure,
+        public gz::sim::ISystemReset
 {
 
     public:
@@ -33,6 +34,8 @@ class Forest
                                const std::shared_ptr<const sdf::Element> &_sdf,
                                gz::sim::EntityComponentManager &_ecm,
                                gz::sim::EventManager &_eventMgr) override;
+        virtual void Reset(const gz::sim::UpdateInfo &_info,
+                           gz::sim::EntityComponentManager &_ecm) override;
 
     private:
     
@@ -56,6 +59,7 @@ class Forest
         std::mt19937 rng;
 
         std::string modelPath;
+        std::string modelString;
         std::string worldName;
         std::string groundTextureStr;
 
@@ -69,7 +73,8 @@ class Forest
 GZ_ADD_PLUGIN(
     Forest,
     Forest::System,
-    Forest::ISystemConfigure
+    Forest::ISystemConfigure,
+    Forest::ISystemReset
 )
 
 #endif //   FOREST_FOREST_H_
