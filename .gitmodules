@@ -10,10 +10,6 @@
 	path = workspace/src/gz-fuel-tools
 	url = https://github.com/gazebosim/gz-fuel-tools.git
 	branch = gz-fuel-tools8
-[submodule "workspace/src/gz-sim"]
-	path = workspace/src/gz-sim
-	url = https://github.com/gazebosim/gz-sim.git
-	branch = gz-sim7
 [submodule "workspace/src/gz-gui"]
 	path = workspace/src/gz-gui
 	url = https://github.com/gazebosim/gz-gui.git
