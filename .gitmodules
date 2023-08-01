@@ -62,7 +62,3 @@
 	path = workspace/src/gz-python
 	url = https://github.com/bostelma/gz-python.git
 	branch = main
-[submodule "workspace/src/gz-sim"]
-	path = workspace/src/gz-sim
-	url = https://github.com/bostelma/gz-sim.git
-	branch = gz-sim7
