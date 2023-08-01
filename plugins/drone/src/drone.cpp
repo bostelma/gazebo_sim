@@ -84,7 +84,7 @@ bool Drone::WaypointService(const gz::msgs::Pose &_req, gz::msgs::Boolean &_rep)
 
 void Drone::OnNewRGBImage(const gz::msgs::Image &imageMsg)
 {
-    if (this->waypoints.empty()) {
+    if (this->waypoints.empty() || this->rgbImage != nullptr) {
         return;
     }
 
@@ -103,29 +103,8 @@ void Drone::OnNewRGBImage(const gz::msgs::Image &imageMsg)
     // Check if the waypoint has been reached
     gz::math::Pose3d currentWaypoint = this->waypoints.front();
     if (imagePose.Equal(currentWaypoint, 0.01)) {
-        if (this->thermalImage != nullptr) {
-            // Publish frame
-            gz::msgs::Frame frame;
-            
-            frame.mutable_header()->mutable_stamp()->CopyFrom(msgTime);
-            frame.mutable_pose()->CopyFrom(gz::msgs::Convert(imagePose));
-            frame.mutable_rgbimage()->CopyFrom(imageMsg);
-            frame.mutable_thermalimage()->CopyFrom(*(this->thermalImage));
-
-            // Publish frame message
-            if (!this->framePub.Publish(frame)) {
-                std::cerr << "[Drone] Failed to publish frame!" << std::endl;
-                return;
-            }
-            // Remove the waypoint
-            this->waypoints.pop();
-
-            this->rgbImage = nullptr;
-            this->thermalImage = nullptr;
-        } else {
-            // Store image data
-            this->rgbImage = std::make_shared<gz::msgs::Image>(imageMsg);
-        }
+        // Store image data
+        this->rgbImage = std::make_shared<gz::msgs::Image>(imageMsg);
     }
 }
 

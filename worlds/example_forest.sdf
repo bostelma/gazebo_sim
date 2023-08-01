@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.10">
-    <world name="forest_world">
+    <world name="example_forest_world">
         <physics name="1ms" type="ignored">
             <max_step_size>0.001</max_step_size>
             <real_time_factor>1.0</real_time_factor>
@@ -38,7 +38,7 @@
             <ground_texture>0</ground_texture>
             <generate>true</generate>
             <size>50</size>
-            <trees>300</trees>
+            <trees>30</trees>
             <species name="Birch">
                 <percentage>0.5</percentage>
                 <homogeneity>0.95</homogeneity>
