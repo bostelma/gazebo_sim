@@ -13,7 +13,8 @@
 
 class Swarm
       : public gz::sim::System,
-        public gz::sim::ISystemConfigure
+        public gz::sim::ISystemConfigure,
+        public gz::sim::ISystemReset
 {
 
     public:
@@ -22,6 +23,9 @@ class Swarm
                                const std::shared_ptr<const sdf::Element> &_sdf,
                                gz::sim::EntityComponentManager &_ecm,
                                gz::sim::EventManager &_eventMgr) override;
+
+        virtual void Reset(const gz::sim::UpdateInfo &_info,
+                           gz::sim::EntityComponentManager &_ecm) override;
 
         bool ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep);
 
@@ -39,5 +43,12 @@ class Swarm
         std::string worldName;
 
 };
+
+GZ_ADD_PLUGIN(
+    Swarm,
+    gz::sim::System,
+    Swarm::ISystemConfigure,
+    Swarm::ISystemReset
+)
 
 #endif  // SWARM_H_

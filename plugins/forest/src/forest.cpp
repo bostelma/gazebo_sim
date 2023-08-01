@@ -63,7 +63,6 @@ void Forest::Configure(const gz::sim::Entity &_entity,
 void Forest::Reset(const gz::sim::UpdateInfo &_info,
            gz::sim::EntityComponentManager &_ecm)
 {
-    std::cout << "Reset" << std::endl;
     this->SpawnModel(this->modelString);
 }
 

@@ -37,6 +37,12 @@ void Swarm::Configure(const gz::sim::Entity &_entity,
     }
 }
 
+void Swarm::Reset(const gz::sim::UpdateInfo &_info,
+                           gz::sim::EntityComponentManager &_ecm)
+{
+    std::cout << "Reset Swarm" << std::endl;
+}
+
 
 bool Swarm::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 {
@@ -127,11 +133,3 @@ bool Swarm::ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_re
 
     return true;
 }
-
-
-
-GZ_ADD_PLUGIN(
-    Swarm,
-    gz::sim::System,
-    Swarm::ISystemConfigure
-)
