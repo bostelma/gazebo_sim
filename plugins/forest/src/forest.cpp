@@ -156,8 +156,9 @@ bool Forest::GenerateGround(sdf::ElementPtr _sdf) {
 bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
 {
 
-    // Distribution to give each tree a different seed
-    std::uniform_int_distribution<int> treeSeedDistribution(0, INT_MAX);
+    // Distribution to give each tree a different seed and rotation
+    std::uniform_int_distribution<int> treeSeedDistribution(0, INT_MAX / 4);
+    std::uniform_real_distribution<double> treeRotDistribution(0, 2 * M_PI);
 
     // Compute the locations using a grid approach
     // (Taken from the original implementation)
@@ -240,11 +241,13 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
                     tree.SetProperty(childName, treePropertiesSDF->GetAny(childName), homogeneity);
                 }
             }
-            tree.Generate();
+            tree.Generate(treeRotDistribution(this->rng));
 
             gz::common::SubMeshPtr trunkSubMesh = createTrunkMeshFromTree(tree);
             gz::common::SubMeshPtr twigsSubMesh = createTwigsMeshFromTree(tree);
             
+            trunkSubMesh->Scale(3.0);
+            twigsSubMesh->Scale(3.0);
             trunkSubMesh->Translate(treePositions.at(treesPlanted));
             twigsSubMesh->Translate(treePositions.at(treesPlanted));
 

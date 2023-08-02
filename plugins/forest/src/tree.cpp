@@ -11,10 +11,13 @@ Tree::~Tree()
 
 }
 
-void Tree::Generate()
+void Tree::Generate(double angle)
 {
     // Compute the new tree
     this->procTree.generate();
+
+    double cos = std::cos(angle);
+    double sin = std::sin(angle);
 
     // Copy and store the trunk data
     // Not that the y and z axis are switched
@@ -24,13 +27,13 @@ void Tree::Generate()
     this->trunkUVs.clear();
     for (int i = 0; i < this->procTree.mVertCount; i++) {
         this->trunkVerticies.push_back(gz::math::Vector3d(
-            this->procTree.mVert[i].x,
-            this->procTree.mVert[i].z,
+            this->procTree.mVert[i].x * cos - this->procTree.mVert[i].z * sin,
+            this->procTree.mVert[i].z * cos + this->procTree.mVert[i].x * sin,
             this->procTree.mVert[i].y
         ));
         this->trunkNormals.push_back(gz::math::Vector3d(
-            this->procTree.mNormal[i].x,
-            this->procTree.mNormal[i].z,
+            this->procTree.mVert[i].x * cos - this->procTree.mVert[i].z * sin,
+            this->procTree.mVert[i].z * cos + this->procTree.mVert[i].x * sin,
             this->procTree.mNormal[i].y
         ));
         this->trunkUVs.push_back(gz::math::Vector2d(
@@ -53,13 +56,13 @@ void Tree::Generate()
     this->twigUVs.clear();
     for (int i = 0; i < this->procTree.mTwigVertCount; i++) {
         this->twigVerticies.push_back(gz::math::Vector3d(
-            this->procTree.mTwigVert[i].x,
-            this->procTree.mTwigVert[i].z,
+            this->procTree.mTwigVert[i].x * cos - this->procTree.mTwigVert[i].z * sin,
+            this->procTree.mTwigVert[i].z * cos + this->procTree.mTwigVert[i].x * sin,
             this->procTree.mTwigVert[i].y
         ));
         this->twigNormals.push_back(gz::math::Vector3d(
-            this->procTree.mTwigNormal[i].x,
-            this->procTree.mTwigNormal[i].z,
+            this->procTree.mTwigNormal[i].x * cos - this->procTree.mTwigNormal[i].z * sin,
+            this->procTree.mTwigNormal[i].z * cos + this->procTree.mTwigNormal[i].x * sin,
             this->procTree.mTwigNormal[i].y
         ));
         this->twigUVs.push_back(gz::math::Vector2d(
@@ -110,45 +113,45 @@ void Tree::SetProperty(const std::string &property, std::any value, float homoge
 
     if (property == "clump_max") {
         this->procTree.mProperties.mClumpMax = floatValue;
-    } else if ("clump_min") {
+    } else if (property == "clump_min") {
         this->procTree.mProperties.mClumpMin = floatValue;
-    } else if ("length_falloff_factor") {
+    } else if (property == "length_falloff_factor") {
         this->procTree.mProperties.mLengthFalloffFactor = floatValue;
-    } else if ("length_falloff_power") {
+    } else if (property == "length_falloff_power") {
         this->procTree.mProperties.mLengthFalloffPower = floatValue;
-    } else if ("branch_factor") {
+    } else if (property == "branch_factor") {
         this->procTree.mProperties.mBranchFactor = floatValue;
-    } else if ("radius_falloff_rate") {
+    } else if (property == "radius_falloff_rate") {
         this->procTree.mProperties.mRadiusFalloffRate = floatValue;
-    } else if ("climb_rate") {
+    } else if (property == "climb_rate") {
         this->procTree.mProperties.mClimbRate = floatValue;
-    } else if ("trunk_kink") {
+    } else if (property == "trunk_kink") {
         this->procTree.mProperties.mTrunkKink = floatValue;
-    } else if ("max_radius") {
+    } else if (property == "max_radius") {
         this->procTree.mProperties.mMaxRadius = floatValue;
-    } else if ("tree_steps") {
+    } else if (property == "tree_steps") {
         this->procTree.mProperties.mTreeSteps = intValue;
-    } else if ("taper_rate") {
+    } else if (property == "taper_rate") {
         this->procTree.mProperties.mTaperRate = floatValue;
-    } else if ("twist_rate") {
+    } else if (property == "twist_rate") {
         this->procTree.mProperties.mTwistRate = floatValue;
-    } else if ("segments") {
+    } else if (property == "segments") {
         this->procTree.mProperties.mSegments = intValue;
-    } else if ("levels") {
+    } else if (property == "levels") {
         this->procTree.mProperties.mLevels = intValue;
-    } else if ("sweep_mount") {
+    } else if (property == "sweep_mount") {
         this->procTree.mProperties.mSweepAmount = floatValue;
-    } else if ("initial_branch_length") {
+    } else if (property == "initial_branch_length") {
         this->procTree.mProperties.mInitialBranchLength = floatValue;
-    } else if ("trunk_length") {
+    } else if (property == "trunk_length") {
         this->procTree.mProperties.mTrunkLength = floatValue;
-    } else if ("drop_amount") {
+    } else if (property == "drop_amount") {
         this->procTree.mProperties.mDropAmount = floatValue;
-    } else if ("grow_amount") {
+    } else if (property == "grow_amount") {
         this->procTree.mProperties.mGrowAmount = floatValue;
-    } else if ("v_multiplier") {
+    } else if (property == "v_multiplier") {
         this->procTree.mProperties.mVMultiplier = floatValue;
-    } else if ("twig_scale") {
+    } else if (property == "twig_scale") {
         this->procTree.mProperties.mTwigScale = floatValue;
     } else {
         std::cerr << "[Tree.cpp] Unsupported property: " << property << std::endl;

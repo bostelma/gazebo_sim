@@ -21,10 +21,10 @@
                    </pbr>
                </material>
            </visual>
-           <visual name='Trunks_Birch'>
+           <visual name='Trunks_None'>
                <geometry>
                    <mesh>
-                       <uri>model://procedural-forest/meshes/trunk_Birch.dae</uri>
+                       <uri>model://procedural-forest/meshes/trunk_None.dae</uri>
                    </mesh>
                </geometry>
                <material>
@@ -39,28 +39,10 @@
                    </pbr>
                </material>
            </visual>
-<visual name='Trunks_Maple'>
+           <visual name='Twigs_None'>
                <geometry>
                    <mesh>
-                       <uri>model://procedural-forest/meshes/trunk_Maple.dae</uri>
-                   </mesh>
-               </geometry>
-               <material>
-                   <double_sided>true</double_sided>
-                   <diffuse>1.0 1.0 1.0</diffuse>
-                   <pbr>
-                       <metal>
-                           <albedo_map>model://procedural-forest/materials/textures/trunk_001_diffuse.tga</albedo_map>
-                           <normal_map>model://procedural-forest/materials/textures/trunk_001_normal.tga</normal_map>
-                           <metalness_map>model://procedural-forest/materials/textures/trunk_001_specular.tga</metalness_map>
-                       </metal>
-                   </pbr>
-               </material>
-           </visual>
-           <visual name='Twigs_Birch'>
-               <geometry>
-                   <mesh>
-                       <uri>model://procedural-forest/meshes/twigs_Birch.dae</uri>
+                       <uri>model://procedural-forest/meshes/twigs_None.dae</uri>
                    </mesh>
                </geometry>
                <material>
@@ -71,24 +53,6 @@
                            <albedo_map>model://procedural-forest/materials/textures/twig_000_diffuse.tga</albedo_map>
                            <normal_map>model://procedural-forest/materials/textures/twig_000_normal.tga</normal_map>
                            <metalness_map>model://procedural-forest/materials/textures/twig_000_specular.tga</metalness_map>
-                       </metal>
-                   </pbr>
-               </material>
-           </visual>
-<visual name='Twigs_Maple'>
-               <geometry>
-                   <mesh>
-                       <uri>model://procedural-forest/meshes/twigs_Maple.dae</uri>
-                   </mesh>
-               </geometry>
-               <material>
-                   <double_sided>true</double_sided>
-                   <diffuse>1.0 1.0 1.0</diffuse>
-                   <pbr>
-                       <metal>
-                           <albedo_map>model://procedural-forest/materials/textures/twig_001_diffuse.tga</albedo_map>
-                           <normal_map>model://procedural-forest/materials/textures/twig_001_normal.tga</normal_map>
-                           <metalness_map>model://procedural-forest/materials/textures/twig_001_specular.tga</metalness_map>
                        </metal>
                    </pbr>
                </material>

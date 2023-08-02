@@ -3,6 +3,7 @@
 
 #include <random>
 #include <vector>
+#include <cmath>
 #include <any>
 
 #include <gz/math.hh>
@@ -17,7 +18,7 @@ class Tree
         Tree(int seed);
         ~Tree();
 
-        void Generate();
+        void Generate(double angle = 0.0);
         void SetProperty(const std::string &property, std::any value, float homogeneity = 1.0);
 
     public:
