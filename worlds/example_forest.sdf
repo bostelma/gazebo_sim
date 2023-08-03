@@ -37,8 +37,8 @@
             <model_name>procedural-forest</model_name>
             <ground_texture>0</ground_texture>
             <generate>true</generate>
-            <size>50</size>
-            <trees>30</trees>
+            <size>100</size>
+            <trees>300</trees>
             <species name="Birch">
                 <percentage>0.5</percentage>
                 <homogeneity>0.95</homogeneity>
@@ -99,6 +99,15 @@
             </species>
         </plugin>
 
+        <plugin
+            filename="Person"
+            name="Person">
+            <model_name>person</model_name>
+            <model_pose>idle</model_pose>
+            <pose>0 0 0 0 0 0</pose>
+            <scale>0.02</scale>
+        </plugin>
+
         <atmosphere type="adiabatic">
         <temperature>300</temperature>
         <!--
@@ -129,11 +138,6 @@
             </attenuation>
             <direction>-0.5 0.1 -0.9</direction>
         </light>
-
-        <include>
-            <uri>model://person</uri>
-            <pose>0 0 0 0 0 0</pose>
-        </include>
 
     </world>
 </sdf>

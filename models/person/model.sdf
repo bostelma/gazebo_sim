@@ -6,7 +6,7 @@
       <visual name="person">
         <geometry>
           <mesh>
-            <uri>model://person/meshes/person.obj</uri>
+            <uri>model://person/meshes/idle.dae</uri>
             <scale>0.02 0.02 0.02</scale>
           </mesh>
         </geometry>
