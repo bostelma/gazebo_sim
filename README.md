@@ -64,6 +64,12 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins
 
 Add the two python directories `~/gazebo_sim/workspace/src/gz-python/build/python` and `~gazebo_sim/python` to your python path or conda.pth file via `export PYTHONPATH=${PYTHONPATH}:[path]` or `conda develop [path]`, respectively.
 
+## Plugins
+
+### Photo Shoot
+
+Do a photoshoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.sdf`
+
 ##  TODOs
 
 - Include gz-python in colcon build
