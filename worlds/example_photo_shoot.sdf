@@ -30,10 +30,10 @@
             name="PhotoShoot">
             <directory>../data/photo_shoot</directory>
             <poses>
-                <pose>-2 -2 7.5 0 1.57 0</pose>
-                <pose>-2  2 7.5 0 1.57 0</pose>
-                <pose> 2 -2 7.5 0 1.57 0</pose>
-                <pose> 2  2 7.5 0 1.57 0</pose>
+                <pose>-5 -5 35 0 1.57 0</pose>
+                <pose>-5  5 35 0 1.57 0</pose>
+                <pose> 5 -5 35 0 1.57 0</pose>
+                <pose> 5  5 35 0 1.57 0</pose>
             </poses>
         </plugin>
 
@@ -74,8 +74,9 @@
             <model_name>procedural-forest</model_name>
             <ground_texture>0</ground_texture>
             <generate>true</generate>
-            <size>10</size>
-            <trees>0</trees>
+            <direct_spawning>true</direct_spawning>
+            <size>100</size>
+            <trees>300</trees>
             <species name="Birch">
                 <percentage>1.0</percentage>
                 <homogeneity>0.95</homogeneity>

@@ -25,6 +25,10 @@ void Forest::Configure(const gz::sim::Entity &_entity,
         return;
     }
 
+    if (!this->generateForest && this->directSpawning) {
+        std::cerr << "[Forest] The forest has to be generated in case of direct loading!" << std::endl;
+        return;
+    }
     
     std::string modelString;
     if (this->generateForest) {
@@ -63,7 +67,7 @@ void Forest::Configure(const gz::sim::Entity &_entity,
 void Forest::Reset(const gz::sim::UpdateInfo &_info,
            gz::sim::EntityComponentManager &_ecm)
 {
-    this->SpawnModel(this->modelString);
+    //this->SpawnModel(this->modelString);
 }
 
 bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
@@ -92,6 +96,11 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
         this->generateForest = _sdf->Get<bool>("generate");
     }
 
+    // Check if the forest should be directly loaded (Which does not work with the gui)
+    if (_sdf->HasElement("direct_spawning")) {
+        this->directSpawning = _sdf->Get<bool>("direct_spawning");
+    }
+
     // Extract the number of trees to generate
     if (_sdf->HasElement("trees")) {
         this->nTrees = _sdf->Get<int>("trees");
@@ -111,9 +120,8 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
     this->groundTextureStr = FormatNumber(groundTextureIndex, 3);
 
     // Get the absolut path to the corresponding model using the config and gazebos resource paths
-    std::string modelName;
     if (_sdf->HasElement("model_name")) {
-        modelName = _sdf->Get<std::string>("model_name");
+        this->modelName = _sdf->Get<std::string>("model_name");
     } else {
         std::cerr << "[Forest] Name of the model is missing, use <model_name> tag to specify!" << std::endl;
         return false;
@@ -142,13 +150,22 @@ bool Forest::GenerateGround(sdf::ElementPtr _sdf) {
     Ground ground;
     ground.Generate(this->forestSize);
 
-    gz::common::MeshPtr groundMesh = std::make_shared<gz::common::Mesh>();
-    
-    gz::common::SubMeshPtr groundSubMesh = createGroundMeshFromGround(ground);
-    groundMesh->AddSubMesh(*groundSubMesh);
+    // The Mesh Manager takes care of deleting the mesh
+    gz::common::Mesh *groundMesh = new gz::common::Mesh();
 
-    std::string groundPath = this->modelPath + "/meshes/ground";
-    gz::common::MeshManager::Instance()->Export(groundMesh.get(), groundPath, "dae");
+    groundMesh->SetName("Ground");
+    groundMesh->AddSubMesh(*createGroundMeshFromGround(ground));
+
+    gz::common::MeshManager::Instance()->AddMesh(groundMesh);
+
+    if (this->directSpawning) {
+        this->groundMeshStr = "<uri>name://Ground</uri>";
+    } else {
+        this->groundMeshStr = "<uri>model://" + this->modelName + "/meshes/Ground.dae</uri>";
+
+        std::string groundPath = this->modelPath + "/meshes/Ground";
+        gz::common::MeshManager::Instance()->Export(groundMesh, groundPath, "dae");
+    }
 
     return true;
 }
@@ -198,7 +215,7 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
         if (speciesSDF->HasAttribute("name")) {
             speciesName = speciesSDF->GetAttribute("name")->GetAsString();
         } else {
-            std::cerr << "[Forest] Species name is missing in species tag!" << std::endl;
+            std::cerr << "[Forest:] Species name is missing in species tag!" << std::endl;
             return false;
         }
         
@@ -227,8 +244,12 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
             this->speciesNames.push_back(speciesName);
         }
 
-        gz::common::MeshPtr trunkMesh = std::make_shared<gz::common::Mesh>();
-        gz::common::MeshPtr twigsMesh = std::make_shared<gz::common::Mesh>();
+        // The MeshManager takes care of the deletion
+        gz::common::Mesh *trunkMesh = new gz::common::Mesh();
+        gz::common::Mesh *twigsMesh = new gz::common::Mesh();
+
+        trunkMesh->SetName(speciesName + "_trunk");
+        twigsMesh->SetName(speciesName + "_twigs");
 
         for (int i = 0; i < nSpeciesTrees && treesPlanted < nTrees; i++) {
 
@@ -254,14 +275,24 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
             trunkMesh->AddSubMesh(*trunkSubMesh);
             twigsMesh->AddSubMesh(*twigsSubMesh);
 
+            gz::common::MeshManager::Instance()->AddMesh(trunkMesh);
+            gz::common::MeshManager::Instance()->AddMesh(twigsMesh);
+
             treesPlanted++;
         }
 
-        // Save the meshes so that they can be loaded using the sdf or used later
-        std::string trunkMeshPath = this->modelPath + "/meshes/trunk_" + speciesName;
-        std::string twigsMeshPath = this->modelPath + "/meshes/twigs_" + speciesName;
-        gz::common::MeshManager::Instance()->Export(trunkMesh.get(), trunkMeshPath, "dae");
-        gz::common::MeshManager::Instance()->Export(twigsMesh.get(), twigsMeshPath, "dae");
+        if (this->directSpawning) {
+            this->treesMeshPrefixStr = "<uri>name://";
+            this->treesMeshPostfixStr = "</uri>";
+        } else {
+            this->treesMeshPrefixStr = "<uri>model://" + this->modelName + "/meshes/";
+            this->treesMeshPostfixStr = ".dae</uri>";
+
+            std::string trunkMeshPath = this->modelPath + "/meshes/" + speciesName + "_trunk";
+            std::string twigsMeshPath = this->modelPath + "/meshes/" + speciesName + "_twigs";
+            gz::common::MeshManager::Instance()->Export(trunkMesh, trunkMeshPath, "dae");
+            gz::common::MeshManager::Instance()->Export(twigsMesh, twigsMeshPath, "dae");
+        }
 
         // Store the texture choices
         int trunkTextureIndex = 0;
@@ -304,7 +335,7 @@ std::string Forest::CreateModelStr()
         trunkVisualString += std::string("<visual name='Trunks_") + speciesName + "'>" + "\n" +
         "               <geometry>" + "\n" +
         "                   <mesh>" + "\n" +
-        "                       <uri>model://procedural-forest/meshes/trunk_" + speciesName + ".dae</uri>" + "\n" +
+        "                       " + this->treesMeshPrefixStr + speciesName + "_trunk" + this->treesMeshPostfixStr + "\n" +
         "                   </mesh>" + "\n" +
         "               </geometry>" + "\n" +
         "               <material>" + "\n" +
@@ -323,7 +354,7 @@ std::string Forest::CreateModelStr()
         twigVisualString += std::string("<visual name='Twigs_") + speciesName + "'>" + "\n" +
         "               <geometry>" + "\n" +
         "                   <mesh>" + "\n" +
-        "                       <uri>model://procedural-forest/meshes/twigs_" + speciesName + ".dae</uri>" + "\n" +
+        "                       " + this->treesMeshPrefixStr + speciesName + "_twigs" + this->treesMeshPostfixStr + "\n" +
         "                   </mesh>" + "\n" +
         "               </geometry>" + "\n" +
         "               <material>" + "\n" +
@@ -348,7 +379,7 @@ std::string Forest::CreateModelStr()
         "           <visual name='Ground'>" + "\n" +
         "               <geometry>" + "\n" + 
         "                   <mesh>" + "\n" +
-        "                       <uri>model://procedural-forest/meshes/ground.dae</uri>" + "\n" +
+        "                       " + this->groundMeshStr + "\n" +
         "                   </mesh>" + "\n" +
         "               </geometry>" + "\n" +
         "               <material>" + "\n" +
@@ -369,12 +400,14 @@ std::string Forest::CreateModelStr()
         "   </model>" + "\n" +
         "</sdf>";
     
-    // Store the sdf so that it can be used as a standalone model
-    std::string modelStrPath = this->modelPath + "/model.sdf";
-    std::ofstream myFile(modelStrPath, std::fstream::out | std::fstream::trunc);
-    myFile << modelStr;
-    myFile.close();
-
+    if (!this->directSpawning) {
+        // Store the sdf so that it can be used as a standalone model
+        std::string modelStrPath = this->modelPath + "/model.sdf";
+        std::ofstream myFile(modelStrPath, std::fstream::out | std::fstream::trunc);
+        myFile << modelStr;
+        myFile.close();
+    }
+    
     return modelStr;
 }
 

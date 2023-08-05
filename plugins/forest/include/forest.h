@@ -13,6 +13,7 @@
 #include <gz/math.hh>
 #include <gz/msgs.hh>
 #include <gz/plugin/Register.hh>
+#include <gz/rendering.hh>
 #include <gz/sim/components.hh>
 #include <gz/sim.hh>
 #include <gz/sim/Util.hh>
@@ -37,8 +38,12 @@ class Forest
         virtual void Reset(const gz::sim::UpdateInfo &_info,
                            gz::sim::EntityComponentManager &_ecm) override;
 
+        void PerformPreRenderingOperations();
+
     private:
     
+        void AddToScene();
+
         bool ParseGeneralSDF(sdf::ElementPtr _sdf);
 
         bool GenerateGround(sdf::ElementPtr _sdf);
@@ -51,17 +56,22 @@ class Forest
 
     private:
 
-        bool generateForest;
+        bool generateForest{true};
+        bool directSpawning{false};
 
         int forestSize;
         int nTrees;
 
         std::mt19937 rng;
 
+        std::string modelName;
         std::string modelPath;
         std::string modelString;
         std::string worldName;
         std::string groundTextureStr;
+        std::string groundMeshStr;
+        std::string treesMeshPrefixStr;
+        std::string treesMeshPostfixStr;
 
         std::vector<std::string> speciesNames;
         std::vector<std::string> trunkTextureStrs;
