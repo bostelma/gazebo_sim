@@ -7,7 +7,7 @@
 ## Install
 
 1. Setup Python 3.8 environment and install protobuf using `
-pip install protobuf==3.20.3` and opencv.
+pip install protobuf==3.20.3`, dict2xml, and opencv.
 
 2. Clone the repository including all submodules:
     ```bash

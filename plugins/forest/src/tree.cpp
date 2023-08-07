@@ -139,7 +139,7 @@ void Tree::SetProperty(const std::string &property, std::any value, float homoge
         this->procTree.mProperties.mSegments = intValue;
     } else if (property == "levels") {
         this->procTree.mProperties.mLevels = intValue;
-    } else if (property == "sweep_mount") {
+    } else if (property == "sweep_amount") {
         this->procTree.mProperties.mSweepAmount = floatValue;
     } else if (property == "initial_branch_length") {
         this->procTree.mProperties.mInitialBranchLength = floatValue;
