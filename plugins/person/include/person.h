@@ -36,6 +36,7 @@ class Person
     private:
 
         float scale;
+        float temperature{-1};
 
         gz::math::Pose3d modelPose;
 

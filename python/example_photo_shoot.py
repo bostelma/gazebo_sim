@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # https://github.com/gazebosim/sdformat/blob/sdf13/python/src/sdf/pyLight.cc
     # shows the available functions.
     light = world_config.get_light("sun")
-    light.set_direction(gzm.Vector3d(-0.5, 0.1, -0.9))
+    light.set_direction(gzm.Vector3d(0.5, 0.5, -0.9))
     
     # Configure the scene, which holds for example the ambient light
     # https://github.com/gazebosim/sdformat/blob/sdf13/python/src/sdf/pyLight.cc
@@ -34,20 +34,23 @@ if __name__ == "__main__":
     # Configure the person plugin. See the respective python file 'person_config'
     # for the available options.
     person_config = PersonConfig()
-    person_config.set_model_pose("sitting")                 # Must match an .dae mesh file
+    person_config.set_model_pose("sitting")                 # Must match a .dae mesh file
                                                             # in the respective model!
-    person_config.set_pose(gzm.Pose3d(0, 0, 0, 0, 0, 0))
+    person_config.set_temperature(307)                      # In Kelvin
+    person_config.set_pose(gzm.Pose3d(0, 0, 0, 0, 0, 0))    # First three values are x, y, z coordinates 
     world_config.add_plugin(person_config)
 
     # Configure the photo shoot plugin. See the respective python file 
     # 'photo_shoot_config.py' for the available options.
     photo_shoot_config = PhotoShootConfig()
     photo_shoot_config.set_directory(output_directory)
+    # photo_shoot_config.set_prefix("some_unique_prefix_for_each_iteration")
+    photo_shoot_config.set_direct_thermal_factor(64)
+    photo_shoot_config.set_indirect_thermal_factor(5.0)
+    photo_shoot_config.set_lower_thermal_threshold(285)
+    photo_shoot_config.set_upper_thermal_threshold(330)
     photo_shoot_config.add_poses([
-        gzm.Pose3d( 10, 10, 35, 0, 1.57, 0),    # The angle looks straight down
-        gzm.Pose3d(-10, 10, 35, 0, 1.57, 0),
-        gzm.Pose3d( 10,-10, 35, 0, 1.57, 0),
-        gzm.Pose3d(-10,-10, 35, 0, 1.57, 0),
+        gzm.Pose3d(0, 0, 35, 0.0, 1.57, 0)    # The angle looks straight down
     ])
     world_config.add_plugin(photo_shoot_config)
 
@@ -57,10 +60,13 @@ if __name__ == "__main__":
     forest_config.set_generate(True)
     forest_config.set_ground_texture(0)         # Have a look at the respective model for options
     forest_config.set_direct_spawning(True)     # Does not work when using the gazebo gui, but 3x faster
+    forest_config.set_ground_temperature(288.15)# In Kelvin
+    forest_config.set_trunk_temperature(291.15) # In Kelvin
+    forest_config.set_twigs_temperature(287.15) # In Kelvin
     forest_config.set_size(100)                 # Width and height of the forest
-    forest_config.set_trees(500)                # Number of treees
+    forest_config.set_trees(200)                # Number of treees
     forest_config.set_seed(100)                 # Change the seed for multiple runs!
-    forest_config.add_species("Birch", {
+    forest_config.set_species("Birch", {
         "percentage": 1.0,                      # Percentage that this species makes up of all trees
         "homogeneity": 0.95,
         "trunk_texture": 0,                     # Have a look at the respective model for options

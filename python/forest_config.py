@@ -46,13 +46,22 @@ class ForestConfig(PluginConfig):
         self.config["seed"]  = seed
         self._write_content()
 
-    def add_species(self, name, config):
+    def set_ground_temperature(self, temperature):
+        self.config["ground_temperature"]  = temperature
+        self._write_content()
+
+    def set_trunk_temperature(self, temperature):
+        self.config["trunk_temperature"]  = temperature
+        self._write_content()
+
+    def set_twigs_temperature(self, temperature):
+        self.config["twigs_temperature"]  = temperature
+        self._write_content()
+
+    def set_species(self, name, config):
 
         tag = f"species_{name}"
-        if tag not in self.config:
-            self.config[tag] = config
-        else:
-            raise ValueError(f"The species {name} already exists!")
+        self.config[tag] = config
         
         self._write_content()
 

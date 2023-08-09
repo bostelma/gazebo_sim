@@ -2,7 +2,8 @@
 
 - Python 3.8
 - CMake >= 3.18
-- Protoc 3.21.5 
+- Protoc 3.21.5
+- opencv
 
 ## Install
 

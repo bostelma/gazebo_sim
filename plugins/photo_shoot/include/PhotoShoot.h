@@ -17,6 +17,12 @@
 #include <gz/sim/Util.hh>
 #include <gz/sim.hh>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
+
 class PhotoShoot
       : public gz::sim::System,
         public gz::sim::ISystemConfigure
@@ -35,17 +41,27 @@ class PhotoShoot
 
         void PerformPostRenderingOperations();
 
-        void SavePicture(const gz::rendering::ThermalCameraPtr _camera,
-                         const gz::math::Pose3d &_pose,
-                         const std::string &_fileName);
+        cv::Mat TakePictureThermal(const gz::rendering::ThermalCameraPtr _camera,
+                                const gz::math::Pose3d &_pose);
+
+        cv::Mat TakePictureRGB(const gz::rendering::CameraPtr _camera,
+                            const gz::math::Pose3d &_pose);
 
     private:
+
+        float direct_thermal_factor;
+        float indirect_thermal_factor;
+        float lower_thermal_threshold;
+        float upper_thermal_threshold;
+
+        unsigned char *rgbData;
 
         bool takePicture{true};
 
         gz::common::ConnectionPtr connection{nullptr};
 
         std::string directory;
+        std::string prefix{""};
 
         std::vector<gz::math::Pose3d> poses;
 

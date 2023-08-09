@@ -30,3 +30,7 @@ class PersonConfig(PluginConfig):
         self.config["scale"] = scale
         self._write_content()
 
+    def set_temperature(self, temperature):
+        self.config["temperature"] = temperature;
+        self._write_content()
+

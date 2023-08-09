@@ -1,13 +1,17 @@
 #include "PhotoShoot.h"
 
+#include <iostream>
+
+
+
 void OnNewThermalFrame(uint16_t *_scanDest, const uint16_t *_scan,
                   unsigned int _width, unsigned int _height,
                   unsigned int _channels,
                   const std::string &_format)
 {
-  uint16_t u;
-  int size =  _width * _height * _channels;
-  memcpy(_scanDest, _scan, size * sizeof(u));
+    uint16_t u;
+    int size =  _width * _height * _channels;
+    memcpy(_scanDest, _scan, size * sizeof(u));
 }
 
 void PhotoShoot::Configure(const gz::sim::Entity &_entity,
@@ -41,6 +45,34 @@ bool PhotoShoot::ParseGeneralSDF(sdf::ElementPtr _sdf)
     }
     this->directory = _sdf->Get<std::string>("directory");
 
+    if (_sdf->HasElement("prefix")) {
+        this->prefix = _sdf->Get<std::string>("prefix");
+    }
+
+    if (!_sdf->HasElement("direct_thermal_factor")) {
+        std::cerr << "[PhotoShoot] Direct thermal factor is missing, specify with <direct_thermal_factor> tag!" << std::endl;
+        return false;    
+    }
+    this->direct_thermal_factor = _sdf->Get<float>("direct_thermal_factor");
+
+    if (!_sdf->HasElement("indirect_thermal_factor")) {
+        std::cerr << "[PhotoShoot] Indirect thermal factor is missing, specify with <indirect_thermal_factor> tag!" << std::endl;
+        return false;    
+    }
+    this->indirect_thermal_factor = _sdf->Get<float>("indirect_thermal_factor");
+
+    if (!_sdf->HasElement("lower_thermal_threshold")) {
+        std::cerr << "[PhotoShoot] Lower thermal threshold value is missing, specify with <lower_thermal_threshold> tag!" << std::endl;
+        return false;    
+    }
+    this->lower_thermal_threshold = _sdf->Get<float>("lower_thermal_threshold");
+
+    if (!_sdf->HasElement("upper_thermal_threshold")) {
+        std::cerr << "[PhotoShoot] Upper thermal threshold value is missing, specify with <upper_thermal_threshold> tag!" << std::endl;
+        return false;    
+    }
+    this->upper_thermal_threshold = _sdf->Get<float>("upper_thermal_threshold");
+
     sdf::ElementPtr poseSDF = _sdf->GetElement("poses")->GetElement("pose");
     while (poseSDF != nullptr) {
         
@@ -56,31 +88,157 @@ bool PhotoShoot::ParseGeneralSDF(sdf::ElementPtr _sdf)
 
 void PhotoShoot::PerformPostRenderingOperations()
 {
-    gz::rendering::ScenePtr scene = gz::rendering::sceneFromFirstRenderEngine();
-    gz::rendering::VisualPtr root = scene->RootVisual();
-
     if (this->takePicture) {
-        for (unsigned int i = 0; i < scene->NodeCount(); ++i) {
-            auto camera = std::dynamic_pointer_cast<gz::rendering::ThermalCamera>(scene->NodeByIndex(i));
-            if (camera != nullptr) {
-                if (camera->Name() == "photo_shoot::camera_link::thermal_camera") {
-                    for (std::size_t i = 0; i < this->poses.size(); i++) {
-                        std::filesystem::path file("pose_" + std::to_string(i) + ".png");
-                        std::filesystem::path directory(this->directory);
-                        std::filesystem::path fullPath = directory / file;
-                        SavePicture(camera, this->poses[i], fullPath.string());
-                    }
+        gz::rendering::ScenePtr scene = gz::rendering::sceneFromFirstRenderEngine();
+        gz::rendering::ThermalCameraPtr thermal_camera;
+        gz::rendering::CameraPtr rgb_camera;
 
-                    this->takePicture = false;
+        for (unsigned int i = 0; i < scene->NodeCount(); ++i) {    
+            auto tmp_thermal_camera = std::dynamic_pointer_cast<gz::rendering::ThermalCamera>(scene->NodeByIndex(i));
+            if (tmp_thermal_camera != nullptr) {
+                if (tmp_thermal_camera->Name() == "photo_shoot::camera_link::thermal_camera") {
+                    thermal_camera = std::dynamic_pointer_cast<gz::rendering::ThermalCamera>(scene->NodeByIndex(i));
+                    thermal_camera->SetMinTemperature(0.0);
+                    thermal_camera->SetMaxTemperature(655.35);
+                    thermal_camera->SetLinearResolution(0.01);
+                }
+            }
+            
+            auto tmp_rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
+            if (tmp_rgb_camera != nullptr) {
+                if (tmp_rgb_camera->Name() == "photo_shoot::camera_link::rgb_camera") {
+                    rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
                 }
             }
         }
+
+        // Take the thermal images
+        std::vector<cv::Mat> thermal_images;
+        for (std::size_t i = 0; i < this->poses.size(); i++) {
+            thermal_images.push_back(this->TakePictureThermal(thermal_camera, this->poses[i]));
+        }
+
+        // Take normal rgb images
+        std::vector<cv::Mat> rgb_light_images;
+        for (std::size_t i = 0; i < this->poses.size(); i++) {
+            cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
+            cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
+            rgb_light_images.push_back(mat);
+        }
+
+        // Disable lights
+        for (unsigned int i = 0; i < scene->LightCount(); ++i) {
+            auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
+            if (light != nullptr) {
+                light->SetIntensity(0.0);
+            }
+        }
+
+        // Take rgb images with only ambient lighting
+        std::vector<cv::Mat> rgb_dark_images;
+        for (std::size_t i = 0; i < this->poses.size(); i++) {
+            cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
+            cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
+            rgb_dark_images.push_back(mat);
+        }
+
+        // Compute thermal output
+        for (unsigned int i = 0; i < rgb_light_images.size(); i++) {
+            cv::Mat &rgbLight = rgb_light_images.at(i);
+            cv::Mat &rgbDark = rgb_dark_images.at(i);
+            cv::Mat thermal;
+            thermal_images.at(i).convertTo(thermal, CV_32F);
+            thermal = thermal * thermal_camera->LinearResolution();
+
+            //cv::imwrite("../../data/photo_shoot/rgbLight.png", rgbLight);
+            //cv::imwrite("../../data/photo_shoot/rgbDark.png", rgbDark);
+
+            // Calculate the brightness values of both rgb images
+            // as grayscale images in the range from 0 to 1
+            cv::Mat brightnessLight, brightnessDark;
+            cv::cvtColor(rgbLight, brightnessLight, cv::COLOR_RGB2GRAY);
+            cv::cvtColor(rgbDark, brightnessDark, cv::COLOR_RGB2GRAY);
+            brightnessLight.convertTo(brightnessLight, CV_32F);
+            brightnessDark.convertTo(brightnessDark, CV_32F);
+            brightnessLight /= 255.0;
+            brightnessDark /= 255.0;
+
+            //cv::imwrite("../../data/photo_shoot/brightnessLight.png", brightnessLight * 255.0);
+            //cv::imwrite("../../data/photo_shoot/brightnessDark.png", brightnessDark * 255.0);
+
+            // Calculate the difference between the two brightness
+            // images, which indicates the effect of the sun
+            cv::Mat lightInfluence;
+            cv::subtract(brightnessLight, brightnessDark, lightInfluence);
+
+            //cv::imwrite("../../data/photo_shoot/lightInfluence.png", lightInfluence * 255.0);
+
+            // Calculate the direct light contribution
+            cv::Mat directLightContribution;
+            cv::multiply((1.0 - brightnessDark), lightInfluence, directLightContribution);
+
+            //cv::imwrite("../../data/photo_shoot/directLightContribution.png", directLightContribution * 255.0);
+
+            // Convert contributions to kelvin
+            cv::Mat directLightContributionThermal;
+            cv::multiply(directLightContribution, this->direct_thermal_factor,  directLightContributionThermal);
+
+            cv::Mat indirectLightContributionThermal;
+            cv::multiply((1.0 - brightnessDark), this->indirect_thermal_factor, indirectLightContributionThermal);
+
+            // Calculate the final thermal image
+            float res = thermal_camera->LinearResolution();
+            float absMin = thermal_camera->MinTemperature();
+            float absMax = thermal_camera->MaxTemperature();
+            float minTemp = 288.15;
+            float maxTemp = 303.15;
+
+            cv::Mat thermalOut = thermal + directLightContributionThermal + indirectLightContributionThermal;
+
+            //double min, max;
+            //cv::minMaxLoc(thermal, &min, &max);
+            //std::cout << "Original Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+            //cv::minMaxLoc(directLightContributionThermal, &min, &max);
+            //std::cout << "Direct Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+            //cv::minMaxLoc(indirectLightContributionThermal, &min, &max);
+            //std::cout << "Indirect Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+
+            cv::Mat mask;
+            //cv::inRange(thermal, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
+            //thermal.copyTo(thermal, mask);
+            //thermal = (thermal - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+
+            cv::inRange(thermalOut, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
+            thermalOut.copyTo(thermalOut, mask);
+            thermalOut = (thermalOut - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+
+            //cv::imwrite("../../data/photo_shoot/thermalIn.png", thermal);
+            //cv::imwrite("../../data/photo_shoot/thermalOut.png", thermalOut);
+
+            std::string connected_prefix = this->prefix + (this->prefix.empty() ? "" : "_");
+            std::filesystem::path file(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
+            std::filesystem::path directory(this->directory);
+            std::filesystem::path fullPath = directory / file;
+
+            cv::imwrite(fullPath.string(), thermalOut);
+        }
+
+        for (cv::Mat mat : thermal_images) {
+            delete[] mat.ptr();
+        }
+        for (cv::Mat mat : rgb_light_images) {
+            delete[] mat.ptr();
+        }
+        for (cv::Mat mat : rgb_dark_images) {
+            delete[] mat.ptr();
+        }
+
+        this->takePicture = false;
     }
 }
 
-void PhotoShoot::SavePicture(const gz::rendering::ThermalCameraPtr _camera,
-                             const gz::math::Pose3d &_pose,
-                             const std::string &_fileName)
+cv::Mat PhotoShoot::TakePictureThermal(const gz::rendering::ThermalCameraPtr _camera,
+                                    const gz::math::Pose3d &_pose)
 {
     unsigned int width = _camera->ImageWidth();
     unsigned int height = _camera->ImageHeight();
@@ -95,8 +253,22 @@ void PhotoShoot::SavePicture(const gz::rendering::ThermalCameraPtr _camera,
             std::placeholders::_4, std::placeholders::_5));
     _camera->Update();
 
-    gz::common::Image image;
-    gz::common::Image::ConvertToRGBImage<uint16_t>(thermalData, width, height, image);
-    
-    image.SavePNG(_fileName);
+    return cv::Mat(height, width, CV_16UC1, thermalData);;
+}
+
+cv::Mat PhotoShoot::TakePictureRGB(const gz::rendering::CameraPtr _camera,
+                                const gz::math::Pose3d &_pose)
+{
+    unsigned int width = _camera->ImageWidth();
+    unsigned int height = _camera->ImageHeight();
+
+    _camera->SetWorldPose(_pose);
+
+    gz::rendering::Image cameraImage = _camera->CreateImage();
+    _camera->Capture(cameraImage);
+
+    uint8_t *rbgData = new uint8_t[width * height * 3];
+    memcpy(rbgData, cameraImage.Data<uint8_t>(), width * height * 3 * sizeof(uint8_t));
+
+    return cv::Mat(height, width, CV_8UC3, rbgData);
 }

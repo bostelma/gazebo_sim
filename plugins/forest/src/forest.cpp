@@ -96,6 +96,17 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
         this->generateForest = _sdf->Get<bool>("generate");
     }
 
+    // Check if temperatur values are given
+    if (_sdf->HasElement("ground_temperature")) {
+        this->groundTemperature = _sdf->Get<float>("ground_temperature");
+    }
+    if (_sdf->HasElement("trunk_temperature")) {
+        this->trunkTemperature = _sdf->Get<float>("trunk_temperature");
+    }
+    if (_sdf->HasElement("twigs_temperature")) {
+        this->twigsTemperature = _sdf->Get<float>("twigs_temperature");
+    }
+
     // Check if the forest should be directly loaded (Which does not work with the gui)
     if (_sdf->HasElement("direct_spawning")) {
         this->directSpawning = _sdf->Get<bool>("direct_spawning");
@@ -349,6 +360,11 @@ std::string Forest::CreateModelStr()
         "                       </metal>" + "\n" +
         "                   </pbr>" + "\n" +
         "               </material>" + "\n" +
+        "               <plugin" + "\n" +
+        "                   filename='ignition-gazebo-thermal-system'" + "\n" +
+        "                   name='ignition::gazebo::systems::Thermal'>" + "\n" +
+        "                   <temperature>" + std::to_string(this->trunkTemperature) + "</temperature>" + "\n" +
+        "               </plugin>" + "\n" +
         "           </visual>" + "\n";
 
         twigVisualString += std::string("<visual name='Twigs_") + speciesName + "'>" + "\n" +
@@ -368,6 +384,11 @@ std::string Forest::CreateModelStr()
         "                       </metal>" + "\n" +
         "                   </pbr>" + "\n" +
         "               </material>" + "\n" +
+        "               <plugin" + "\n" +
+        "                   filename='ignition-gazebo-thermal-system'" + "\n" +
+        "                   name='ignition::gazebo::systems::Thermal'>" + "\n" +
+        "                   <temperature>" + std::to_string(this->twigsTemperature) + "</temperature>" + "\n" +
+        "               </plugin>" + "\n" +
         "           </visual>" + "\n";
     }
 
@@ -393,6 +414,11 @@ std::string Forest::CreateModelStr()
         "                       </metal>" + "\n" +
         "                   </pbr>" + "\n" +
         "               </material>" + "\n" +
+        "               <plugin" + "\n" +
+        "                   filename='ignition-gazebo-thermal-system'" + "\n" +
+        "                   name='ignition::gazebo::systems::Thermal'>" + "\n" +
+        "                   <temperature>" + std::to_string(this->groundTemperature) + "</temperature>" + "\n" +
+        "               </plugin>" + "\n" +
         "           </visual>" + "\n" +
         "           " + trunkVisualString +
         "           " + twigVisualString +

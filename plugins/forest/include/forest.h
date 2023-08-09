@@ -59,6 +59,10 @@ class Forest
         bool generateForest{true};
         bool directSpawning{false};
 
+        float groundTemperature{288.15};
+        float trunkTemperature{288.15};
+        float twigsTemperature{288.15};
+
         int forestSize;
         int nTrees;
 

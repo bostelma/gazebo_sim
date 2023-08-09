@@ -29,6 +29,10 @@
             filename="PhotoShoot"
             name="PhotoShoot">
             <directory>../data/photo_shoot</directory>
+            <direct_thermal_factor>64</direct_thermal_factor>
+            <indirect_thermal_factor>5.0</indirect_thermal_factor>
+            <lower_thermal_threshold>285</lower_thermal_threshold>
+            <upper_thermal_threshold>330</upper_thermal_threshold>
             <poses>
                 <pose>-5 -5 35 0 1.57 0</pose>
                 <pose>-5  5 35 0 1.57 0</pose>
@@ -60,10 +64,25 @@
                     <plugin
                         filename="gz-sim-thermal-sensor-system"
                         name="gz::sim::systems::ThermalSensor">
-                        <min_temp>253.15</min_temp>
-                        <max_temp>673.15</max_temp>
-                        <resolution>3.0</resolution>
                     </plugin>
+                </sensor>
+                <sensor name="rgb_camera" type="camera">
+                    <update_rate>30.0</update_rate>
+                    <always_on>1</always_on>
+                    <camera>
+                    <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
+                    <!-- and the cames output size in pixels -->
+                    <horizontal_fov>0.872665</horizontal_fov>
+                    <image>
+                        <width>512</width>
+                        <height>512</height>
+                    </image>
+                    <!-- Furthe camera parameters -->
+                    <clip>
+                        <near>1</near>
+                        <far>250</far>
+                    </clip>
+                    </camera>
                 </sensor>
             </link>
         </model>

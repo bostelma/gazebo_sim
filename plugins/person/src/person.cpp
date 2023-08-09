@@ -48,6 +48,14 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
     }
     this->scale = _sdf->Get<float>("scale");
 
+    if (_sdf->HasElement("temperature")) {
+        this->temperature = _sdf->Get<float>("temperature");
+        if (this->temperature < 0.0) {
+            std::cerr << "[Person] Temperature values must be positive, as they are in Kelvin!" << std::endl;
+            return false;
+        }
+    }
+
     std::vector<std::string> resourcePaths = gz::sim::resourcePaths();
     for (const std::string &resourcePath : resourcePaths) {
         for (const auto &entry : std::filesystem::directory_iterator(resourcePath)) {
@@ -75,7 +83,7 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
 
 std::string Person::CreateModelStr()
 {
-    return std::string("<?xml version='1.0'?>") + "\n" +
+    std::string modelStr = std::string("<?xml version='1.0'?>") + "\n" +
     "<sdf version='1.6'>" + "\n" +
     "   <model name='Person'>" + "\n" +
     "       <static>true</static>" + "\n" +
@@ -86,11 +94,22 @@ std::string Person::CreateModelStr()
     "                       <uri>" + this->meshPath + "</uri>" + "\n" +
     "                       <scale>" + std::to_string(this->scale) + " " + std::to_string(this->scale) + " " + std::to_string(this->scale) + "</scale>" + "\n" +
     "                   </mesh>" + "\n" +
-    "               </geometry>" + "\n" +
-    "           </visual>" + "\n" +
+    "               </geometry>" + "\n";
+    
+    if (this->temperature >= 0.0) {
+        modelStr += std::string("               <plugin") + "\n" +
+        "                   filename='ignition-gazebo-thermal-system'" + "\n" +
+        "                   name='ignition::gazebo::systems::Thermal'>" + "\n" +
+        "                   <temperature>" + std::to_string(this->temperature) + "</temperature>" + "\n" +
+        "               </plugin>" + "\n";
+    }
+
+    modelStr += std::string("           </visual>") + "\n" +
     "       </link>" + "\n" +
     "   </model>" + "\n" +
     "</sdf>";
+
+    return modelStr;
 }
 
 bool Person::SpawnModel(std::string modelStr)
