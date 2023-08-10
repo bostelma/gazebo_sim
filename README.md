@@ -66,6 +66,8 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins
 
 Add the three python directories `~/gazebo_sim/workspace/src/gz-python/build/python`, `~/gazebo_sim/workspace/install/lib/python`, and `~gazebo_sim/python` to your python path or conda.pth file via `export PYTHONPATH=${PYTHONPATH}:[path]` or `conda develop [path]`, respectively.
 
+The easiest way to generate images directly is through python. Have a look at the corresponding example file in the python directory.
+
 ## Plugins
 
 ### Photo Shoot
@@ -77,6 +79,7 @@ Do a photoshoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.sd
 - Include gz-python in colcon build
 - Add global build for plugins
 - Build additional messages separately (https://github.com/gazebosim/gz-sim/blob/fbc3ca84b86cc3c0033ae3979797340b7bf1b361/src/msgs/CMakeLists.txt)
+- Redo the swarm plugin and add the new thermal functionality
 
 ## Issues
 
@@ -94,7 +97,6 @@ Do a photoshoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.sd
 - one tree with two species, 0.5 each produces error
 - crash on reset:   [Err] [SceneManager.cc:223] Visual: [Procedural Forest] already exists
                     terminate called after throwing an instance of 'std::bad_optional_access'
-- Tree height seems to be smaller in comparison to original implementation
 
 
 
