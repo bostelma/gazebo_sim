@@ -57,15 +57,7 @@
 	make
     ```
 
-9. Setup the rest of the paths for the current prompt:
-    ```
-    cd ~/gazebo_sim/plugins/forest  # change to 'person' and 'photo_shoot' respectively
-	- mkdir build
-	- cd build
-	- cmake ..
-	- make
-
-11. Setup all paths to make everything available in the current prompt:
+9. Setup all paths to make everything available in the current prompt:
     ```
 	export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:~/gazebo_sim/models
 	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/forest/build/lib
@@ -107,7 +99,58 @@
     sudo chmod ugo+rwx dev/dri/*
     ```
 
+### Additional Component: gz-python
+
+This component adds python binding to msgs and transport and is required to use the swarm functionality.
+
+1. Setup a python 3.8 environment, for example using conda and install protobuf==3.20.3
+
+2. Follow steps 1 through 5 of the ubuntu install instructions and install the correct libogre version if you are using windows.
+
+3. Export your selected python interpreter (`which python` shows path):
+    ```
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=[your python path]
+    ```
+
+4. Add your python path and version to the build command:
+    ```
+    cd ~/gazebo_sim/workspace
+    colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTBALE=[path to your python] -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
+    ```
+
+5. Source the Gazebo workspace to make it available in the current prompt:
+    ```
+    . ~/gazebo_sim/workspace/install/setup.bash
+    ```
+
+6. Prepare gz-python build from workspace directory and make sure that it finds your chosen python interpreter!
+    ```
+    mkdir -p ~/gazebo_sim/workspace/src/gz-python/build
+    cd src/gz-python/build
+    cmake ..
+    ```
+
+7. In _deps/pybind11_protobuf-src/CMakeLists.txt, replace `SHARED` with `STATIC`
+
+8. Build gz-python using `make`
+
+9. Build the plugins as in step 8 of the ubuntu install instructions, but this time build the swarm plugin as well.
+
+10. Setup all paths to make everything available in the current prompt. If you are using conda, replace the export command with `conda develop [path]` like for example `conda develop ~/gazebo_sim/python`.
+    ```
+	export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:~/gazebo_sim/models
+	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/forest/build/lib
+	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/person/build/lib
+	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/photo_shoot/build/lib
+    export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/swarm/build/lib
+	export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/python
+	export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/workspace/install/lib/python
+    export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/workspace/src/gz-python/build/python
+    ```
+
 ## Usage
+
+### Photo Shoot
 
 1. Make sure that everything is available by performing step 7 and 10 of the ubuntu install instructions before starting.
 
@@ -124,7 +167,27 @@
 
 4. The resulting image is now stored at the previously created directory. Have a look at the used python file to generate custom images yourself.
 
+### Swarm
 
+1. Make sure that everything is available by performing step 7 and 10 of the ubuntu install instructions before starting, as well as the additional python path for gz-python.
+
+2. Create the data directory for the example script:
+    ```
+    mkdir -p ~/data/swarm
+    ```
+
+3. Start and run the gazebo simulation first in headless mode:
+    ```
+    gz sim ~/gazebo_sim/worlds/example_swarm.sdf -r -s
+    ```
+
+4. Execute the example python file in another shell.
+    ```
+    cd ~/gazebo_sim/python
+    python3 example_swarm.py 
+    ```
+
+5. The resulting images are now stored at the previously created directory. Have a look at the used python file to understand how it is done. The benefit of this method is, that multiple images of the same world can be generated without restarting the whole simulation. As the tree generation takes up most of the startup time, this is a significant time decrease.
 
 ## Plugins
 

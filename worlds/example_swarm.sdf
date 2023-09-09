@@ -1,0 +1,162 @@
+<?xml version="1.0" ?>
+<sdf version="1.10">
+    <world name="example_swarm">
+        <physics name="1ms" type="ignored">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <plugin
+            filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics">
+        </plugin>
+        <plugin
+            filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands">
+        </plugin>
+
+        <plugin
+            filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster">
+        </plugin>
+        <plugin
+            filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+            <background_color>1, 1, 1</background_color>
+        </plugin>
+  
+        <plugin
+            filename="Person"
+            name="Person">
+            <model_name>person</model_name>
+            <model_pose>sitting</model_pose>
+            <pose>-3 3 0 0 0 0</pose>
+            <scale>0.02</scale>
+        </plugin>
+
+        <plugin
+            filename="Forest"
+            name="Forest">
+            <model_name>procedural-forest</model_name>
+            <seed>0</seed>
+            <ground_texture>0</ground_texture>
+            <generate>true</generate>
+            <size>10</size>
+            <trees>1</trees>
+            <species name="None">
+                <percentage>1.0</percentage>
+                <homogeneity>0.95</homogeneity>
+                <trunk_texture>0</trunk_texture>
+                <twigs_texture>0</twigs_texture>
+                <tree_properties>
+                    <clump_max>0.45</clump_max>
+                    <clump_min>0.4</clump_min>
+                    <length_falloff_factor>0.65</length_falloff_factor>
+                    <length_falloff_power>0.75</length_falloff_power>
+                    <branch_factor>2.45</branch_factor>
+                    <radius_falloff_rate>0.7</radius_falloff_rate>
+                    <climb_rate>0.55</climb_rate>
+                    <trunk_kink>0.05</trunk_kink>
+                    <max_radius>0.1</max_radius>
+                    <tree_steps>10</tree_steps>
+                    <taper_rate>0.8</taper_rate>
+                    <twist_rate>8.0</twist_rate>
+                    <segments>6</segments>
+                    <levels>5</levels>
+                    <sweep_amount>0.00</sweep_amount>
+                    <initial_branch_length>0.7</initial_branch_length>
+                    <trunk_length>1.0</trunk_length>
+                    <drop_amount>0.0</drop_amount>
+                    <grow_amount>0.4</grow_amount>
+                    <v_multiplier>0.2</v_multiplier>
+                    <twig_scale>0.2</twig_scale>
+                </tree_properties>
+            </species>
+        </plugin>
+
+        <plugin
+            filename="Swarm"
+            name="Swarm">
+            <direct_thermal_factor>64</direct_thermal_factor>
+            <indirect_thermal_factor>5.0</indirect_thermal_factor>
+            <lower_thermal_threshold>285</lower_thermal_threshold>
+            <upper_thermal_threshold>330</upper_thermal_threshold>
+        </plugin>
+
+        <model name="drone_camera">
+            <link name="camera_link">
+                <sensor name="thermal_camera" type="thermal">
+                    <update_rate>30.0</update_rate>
+                    <always_on>1</always_on>
+                    <camera>
+                    <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
+                    <!-- and the cames output size in pixels -->
+                    <horizontal_fov>0.872665</horizontal_fov>
+                    <image>
+                        <width>512</width>
+                        <height>512</height>
+                        <format>L16</format>
+                    </image>
+                    <!-- Furthe camera parameters -->
+                    <clip>
+                        <near>1</near>
+                        <far>250</far>
+                    </clip>
+                    </camera>
+                    <plugin
+                        filename="gz-sim-thermal-sensor-system"
+                        name="gz::sim::systems::ThermalSensor">
+                    </plugin>
+                </sensor>
+                <sensor name="rgb_camera" type="camera">
+                    <update_rate>30.0</update_rate>
+                    <always_on>1</always_on>
+                    <camera>
+                    <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
+                    <!-- and the cames output size in pixels -->
+                    <horizontal_fov>0.872665</horizontal_fov>
+                    <image>
+                        <width>512</width>
+                        <height>512</height>
+                    </image>
+                    <!-- Furthe camera parameters -->
+                    <clip>
+                        <near>1</near>
+                        <far>250</far>
+                    </clip>
+                    </camera>
+                </sensor>
+            </link>
+        </model>
+
+        <atmosphere type="adiabatic">
+        <temperature>300</temperature>
+        <!--
+            This is a more exaggerated temperature gradient, which produces a
+            temperature range of ~11.5 kelvin for objects in the thermal camera
+            view that don't have a user-specified temperature.
+            Typical temperature gradient is -0.0065 K/m which produces a
+            temperature range of 0.75 kelvin.
+        -->
+        <temperature_gradient>0.1</temperature_gradient>
+        </atmosphere>
+
+        <scene>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <background>0.25 0.25 0.25 1</background>
+        </scene>
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 100 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+    </world>
+</sdf>

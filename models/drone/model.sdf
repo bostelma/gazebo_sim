@@ -3,12 +3,6 @@
 <sdf version="1.6">
   <model name="Drone">
 
-    <!-- A really basic controller that ports to given waypoints -->
-    <plugin
-      filename="Drone"
-      name="Drone">
-    </plugin>
-
     <!-- For now the dronw is static, as it gets placed at the desired location -->
     <static>true</static>
 
@@ -22,55 +16,6 @@
           </box>
         </geometry>
       </visual>
-    </link>
-
-    <!-- The camera sensors -->
-    <link name="camera_link">
-      <pose>0 0 0 0 1.57 0</pose>
-      <sensor name="camera" type="camera">
-      <update_rate>23.0</update_rate>
-      <always_on>true</always_on>
-        <camera>
-          <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
-          <!-- and the cames output size in pixels -->
-          <horizontal_fov>0.872665</horizontal_fov>
-          <image>
-            <width>1024</width>
-            <height>1024</height>
-          </image>
-          <!-- Furthe camera parameters -->
-          <clip>
-            <near>1</near>
-            <far>250</far>
-          </clip>
-        </camera>
-      </sensor>
-      <sensor name="thermal_camera" type="thermal">
-        <update_rate>23.0</update_rate>
-        <always_on>true</always_on>
-        <camera>
-          <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
-          <!-- and the cames output size in pixels -->
-          <horizontal_fov>0.872665</horizontal_fov>
-          <image>
-            <width>1024</width>
-            <height>1024</height>
-            <format>L8</format>
-          </image>
-          <!-- Furthe camera parameters -->
-          <clip>
-            <near>1</near>
-            <far>250</far>
-          </clip>
-        </camera>
-          <plugin
-            filename="gz-sim-thermal-sensor-system"
-            name="gz::sim::systems::ThermalSensor">
-            <min_temp>253.15</min_temp>
-            <max_temp>673.15</max_temp>
-            <resolution>3.0</resolution>
-          </plugin>
-      </sensor>
     </link>
   </model>
 </sdf>

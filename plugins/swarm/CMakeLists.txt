@@ -32,6 +32,11 @@ set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
 gz_find_package(gz-sim7 REQUIRED)
 set(GZ_SIM_VER ${gz-sim7_VERSION_MAJOR})
 
+#--------------------------------------
+# Find openCV
+find_package(OpenCV REQUIRED )
+INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
+
 # Include dirs
 include_directories(include)
 
@@ -44,4 +49,6 @@ add_library(${PROJECT_NAME} SHARED
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
-  PUBLIC gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER})
+  PUBLIC gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
+  PRIVATE ${OpenCV_LIBS}
+)
