@@ -101,8 +101,8 @@ class Swarm:
 
             pos_msg = Vector3d()
             if positions is not None:
-                pos_msg.x = positions[i, 0]
-                pos_msg.y = positions[i, 1]
+                pos_msg.x = -positions[i, 1]     # Add this transformation to fit the LFR coordinate system
+                pos_msg.y = -positions[i, 0]     # Add this transformation to fit the LFR coordinate system
                 pos_msg.z = positions[i, 2]
             else:
                 pos_msg.x = 0
@@ -162,8 +162,8 @@ class Swarm:
         for id, pos in zip(ids, positions, ):
 
             pos_msg = Vector3d()
-            pos_msg.x = pos[0]
-            pos_msg.y = pos[1]
+            pos_msg.x = -pos[1]     # Add this transformation to fit the LFR coordinate system
+            pos_msg.y = -pos[0]     # Add this transformation to fit the LFR coordinate system
             pos_msg.z = pos[2]
            
             quat_msg = Quaternion()
