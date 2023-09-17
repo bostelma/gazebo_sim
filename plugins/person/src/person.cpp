@@ -17,6 +17,13 @@ void Person::Configure(const gz::sim::Entity &_entity,
         return;
     }
 
+    // Advertise the waypoint service
+    std::string service = "/world/" + this->worldName + "/person/waypoint";
+    if (!this->waypointNode.Advertise(service, &Person::ServiceWaypoint, this)) {
+        std::cerr << "[Person] Error advertising service [" << service << "]" << std::endl;
+        return;
+    }
+
     std::string modelString = this->CreateModelStr();
 
     this->SpawnModel(modelString);
@@ -77,6 +84,26 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
         return false;
     }
     this->meshPath = "model://" + modelName + "/meshes/" + modelPose + ".dae";
+
+    return true;
+}
+
+void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
+                      gz::sim::EntityComponentManager &_ecm)
+{
+    if (!this->waypoints.empty()) {
+        gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name("Person"));
+        gz::sim::Model model = gz::sim::Model(entity);
+        model.SetWorldPoseCmd(_ecm, this->waypoints.front());
+        this->waypoints.pop();
+    }
+    
+}
+
+bool Person::ServiceWaypoint(const gz::msgs::Pose &_req, gz::msgs::Boolean &_rep)
+{
+    gz::math::Pose3d waypoint = gz::msgs::Convert(_req);
+    this->waypoints.push(waypoint);
 
     return true;
 }

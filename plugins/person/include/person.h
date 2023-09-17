@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <queue>
 
 #include <gz/math.hh>
 #include <gz/msgs.hh>
@@ -11,11 +12,18 @@
 #include <gz/sim/components.hh>
 #include <gz/sim/Util.hh>
 #include <gz/transport.hh>
+#include <gz/msgs.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/System.hh>
+#include <gz/sim/components/Name.hh>
+#include <gz/sim/components/World.hh>
+#include <gz/msgs/Utility.hh>
 
 
 class Person
       : public gz::sim::System,
-        public gz::sim::ISystemConfigure
+        public gz::sim::ISystemConfigure,
+        public gz::sim::ISystemPreUpdate
 {
 
     public:
@@ -24,6 +32,11 @@ class Person
                                const std::shared_ptr<const sdf::Element> &_sdf,
                                gz::sim::EntityComponentManager &_ecm,
                                gz::sim::EventManager &_eventMgr) override;
+
+        virtual void PreUpdate(const gz::sim::UpdateInfo &_info,
+                               gz::sim::EntityComponentManager &_ecm) override;
+
+        bool ServiceWaypoint(const gz::msgs::Pose &_req, gz::msgs::Boolean &_rep);
 
     private:
 
@@ -44,12 +57,17 @@ class Person
         std::string modelPath;
         std::string worldName;
 
+        gz::transport::Node waypointNode;
+
+        std::queue<gz::math::Pose3d> waypoints;
+
 };
 
 GZ_ADD_PLUGIN(
     Person,
     Person::System,
-    Person::ISystemConfigure
+    Person::ISystemConfigure,
+    Person::ISystemPreUpdate
 )
 
 #endif  // PERSON_PERSON_H_
