@@ -12,6 +12,7 @@
 #include <gz/rendering/Scene.hh>
 #include <gz/rendering/RenderingIface.hh>
 #include <gz/rendering/ThermalCamera.hh>
+#include <gz/rendering/DepthCamera.hh>
 #include <gz/rendering/Visual.hh>
 #include <gz/sim/rendering/Events.hh>
 #include <gz/sim/Util.hh>
@@ -47,7 +48,17 @@ class PhotoShoot
         cv::Mat TakePictureRGB(const gz::rendering::CameraPtr _camera,
                             const gz::math::Pose3d &_pose);
 
+        cv::Mat TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
+                              const gz::math::Pose3d &_pose);
+
     private:
+
+        bool save_rgb{true};
+        bool save_thermal{true};
+        bool save_depth{true};
+
+        float depth_offset{0.0f};
+        float depth_scale{100.0f};
 
         float direct_thermal_factor;
         float indirect_thermal_factor;

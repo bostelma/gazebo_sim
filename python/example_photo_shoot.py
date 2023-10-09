@@ -45,6 +45,11 @@ if __name__ == "__main__":
     photo_shoot_config = PhotoShootConfig()
     photo_shoot_config.set_directory(output_directory)
     # photo_shoot_config.set_prefix("some_unique_prefix_for_each_iteration")
+    photo_shoot_config.set_depth_scaling(0.0, 100.0)    # Transform the depth data to a 16Bit grayscale
+                                                        # image containing the depth in cm.
+    photo_shoot_config.set_save_rgb(True)               # Whether to save rgb images
+    photo_shoot_config.set_save_thermal(True)           # Whether to save thermal images
+    photo_shoot_config.set_save_depth(True)             # Whether to save depth images
     photo_shoot_config.set_direct_thermal_factor(64)
     photo_shoot_config.set_indirect_thermal_factor(5.0)
     photo_shoot_config.set_lower_thermal_threshold(285)
@@ -64,7 +69,7 @@ if __name__ == "__main__":
     forest_config.set_trunk_temperature(291.15) # In Kelvin
     forest_config.set_twigs_temperature(287.15) # In Kelvin
     forest_config.set_size(100)                 # Width and height of the forest
-    forest_config.set_trees(200)                # Number of treees
+    forest_config.set_trees(200)                # Number of trees
     forest_config.set_seed(100)                 # Change the seed for multiple runs!
     forest_config.set_species("Birch", {
         "percentage": 1.0,                      # Percentage that this species makes up of all trees

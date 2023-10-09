@@ -29,6 +29,11 @@
             filename="PhotoShoot"
             name="PhotoShoot">
             <directory>../data/photo_shoot</directory>
+            <depth_offset>0.0</depth_offset>
+            <depth_scale>100.0</depth_scale>
+            <save_rgb>true</save_rgb>
+            <save_depth>true</save_depth>
+            <save_thermal>true</save_thermal>
             <direct_thermal_factor>64</direct_thermal_factor>
             <indirect_thermal_factor>5.0</indirect_thermal_factor>
             <lower_thermal_threshold>285</lower_thermal_threshold>
@@ -84,6 +89,24 @@
                     </clip>
                     </camera>
                 </sensor>
+                <sensor name="depth_camera" type="depth_camera">
+                    <update_rate>30.0</update_rate>
+                    <always_on>1</always_on>
+                    <camera>
+                    <!-- The cameras Field of View (FOV): 50 degrees -> 0.872665 rad -->
+                    <!-- and the cames output size in pixels -->
+                    <horizontal_fov>0.872665</horizontal_fov>
+                    <image>
+                        <width>512</width>
+                        <height>512</height>
+                    </image>
+                    <!-- Furthe camera parameters -->
+                    <clip>
+                        <near>1</near>
+                        <far>250</far>
+                    </clip>
+                    </camera>
+                </sensor>
             </link>
         </model>
 
@@ -95,7 +118,7 @@
             <generate>true</generate>
             <direct_spawning>true</direct_spawning>
             <size>100</size>
-            <trees>300</trees>
+            <trees>0</trees>
             <species name="Birch">
                 <percentage>1.0</percentage>
                 <homogeneity>0.95</homogeneity>

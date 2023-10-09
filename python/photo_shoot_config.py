@@ -20,9 +20,38 @@ class PhotoShootConfig(PluginConfig):
         self._write_content()
 
     def set_directory(self, directory):
-
         self.config["directory"] = directory
+        self._write_content()
 
+    def set_depth_scaling(self, offset, scale):
+        """
+        Set the depth scaling parameters
+
+        The depth data is generated in gazebo as floats in meters. This
+        data gets converted to a grayscale 16Bit image by scaling:
+        depth_out = (depth + offset) * scale
+
+        Parameters
+        ----------
+        offset : float
+            The offset to add to the depth data
+        scale : float
+            The scale to multiply the depth data with
+        """
+        self.config["depth_offset"] = offset
+        self.config["depth_scale"] = scale
+        self._write_content()
+
+    def set_save_rgb(self, save_rgb):
+        self.config["save_rgb"] = save_rgb
+        self._write_content()
+
+    def set_save_thermal(self, save_thermal):
+        self.config["save_thermal"] = save_thermal
+        self._write_content()
+
+    def set_save_depth(self, save_depth):
+        self.config["save_depth"] = save_depth
         self._write_content()
 
     def set_direct_thermal_factor(self, direct_thermal_factor):

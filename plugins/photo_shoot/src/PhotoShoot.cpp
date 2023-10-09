@@ -14,6 +14,16 @@ void OnNewThermalFrame(uint16_t *_scanDest, const uint16_t *_scan,
     memcpy(_scanDest, _scan, size * sizeof(u));
 }
 
+void OnNewDepthFrame(float *_scanDest, const float *_scan,
+                  unsigned int _width, unsigned int _height,
+                  unsigned int _channels,
+                  const std::string &_format)
+{
+    float u;
+    int size =  _width * _height;
+    memcpy(_scanDest, _scan, size * sizeof(u));
+}
+
 void PhotoShoot::Configure(const gz::sim::Entity &_entity,
                            const std::shared_ptr<const sdf::Element> &_sdf,
                            gz::sim::EntityComponentManager &_ecm,
@@ -47,6 +57,26 @@ bool PhotoShoot::ParseGeneralSDF(sdf::ElementPtr _sdf)
 
     if (_sdf->HasElement("prefix")) {
         this->prefix = _sdf->Get<std::string>("prefix");
+    }
+
+    if (_sdf->HasElement("depth_offset")) {
+        this->depth_offset = _sdf->Get<float>("depth_offset");
+    }
+
+    if (_sdf->HasElement("depth_scale")) {
+        this->depth_scale = _sdf->Get<float>("depth_scale");
+    }
+
+    if (_sdf->HasElement("save_rgb")) {
+        this->save_rgb = _sdf->Get<bool>("save_rgb");
+    }
+
+    if (_sdf->HasElement("save_thermal")) {
+        this->save_thermal = _sdf->Get<bool>("save_thermal");
+    }
+
+    if (_sdf->HasElement("save_depth")) {
+        this->save_depth = _sdf->Get<bool>("save_depth");
     }
 
     if (!_sdf->HasElement("direct_thermal_factor")) {
@@ -90,10 +120,26 @@ void PhotoShoot::PerformPostRenderingOperations()
 {
     if (this->takePicture) {
         gz::rendering::ScenePtr scene = gz::rendering::sceneFromFirstRenderEngine();
-        gz::rendering::ThermalCameraPtr thermal_camera;
         gz::rendering::CameraPtr rgb_camera;
+        gz::rendering::DepthCameraPtr depth_camera;
+        gz::rendering::ThermalCameraPtr thermal_camera;
+        
+        for (unsigned int i = 0; i < scene->NodeCount(); ++i) { 
 
-        for (unsigned int i = 0; i < scene->NodeCount(); ++i) {    
+            auto tmp_rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
+            if (tmp_rgb_camera != nullptr) {
+                if (tmp_rgb_camera->Name() == "photo_shoot::camera_link::rgb_camera") {
+                    rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
+                }
+            }
+
+            auto tmp_depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
+            if (tmp_depth_camera != nullptr) {
+                if (tmp_depth_camera->Name() == "photo_shoot::camera_link::depth_camera") {
+                    depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
+                }
+            }
+
             auto tmp_thermal_camera = std::dynamic_pointer_cast<gz::rendering::ThermalCamera>(scene->NodeByIndex(i));
             if (tmp_thermal_camera != nullptr) {
                 if (tmp_thermal_camera->Name() == "photo_shoot::camera_link::thermal_camera") {
@@ -101,13 +147,6 @@ void PhotoShoot::PerformPostRenderingOperations()
                     thermal_camera->SetMinTemperature(0.0);
                     thermal_camera->SetMaxTemperature(655.35);
                     thermal_camera->SetLinearResolution(0.01);
-                }
-            }
-            
-            auto tmp_rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
-            if (tmp_rgb_camera != nullptr) {
-                if (tmp_rgb_camera->Name() == "photo_shoot::camera_link::rgb_camera") {
-                    rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
                 }
             }
         }
@@ -126,6 +165,12 @@ void PhotoShoot::PerformPostRenderingOperations()
             rgb_light_images.push_back(mat);
         }
 
+        // Take depth images
+        std::vector<cv::Mat> depth_images;
+        for (std::size_t i = 0; i < this->poses.size(); i++) {
+            depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));
+        }
+
         // Disable lights
         for (unsigned int i = 0; i < scene->LightCount(); ++i) {
             auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
@@ -142,8 +187,19 @@ void PhotoShoot::PerformPostRenderingOperations()
             rgb_dark_images.push_back(mat);
         }
 
-        // Compute thermal output
+        // Compute outputs
         for (unsigned int i = 0; i < rgb_light_images.size(); i++) {
+
+            // Process Depth image
+            cv::Mat &depth = depth_images.at(i);
+
+            depth += this->depth_offset;
+            depth *= this->depth_scale;
+
+            cv::Mat depthOut;
+            depth.convertTo(depthOut, CV_16U);
+
+            // Process Thermal image
             cv::Mat &rgbLight = rgb_light_images.at(i);
             cv::Mat &rgbDark = rgb_dark_images.at(i);
             cv::Mat thermal;
@@ -215,12 +271,30 @@ void PhotoShoot::PerformPostRenderingOperations()
             //cv::imwrite("../../data/photo_shoot/thermalIn.png", thermal);
             //cv::imwrite("../../data/photo_shoot/thermalOut.png", thermalOut);
 
+            // Save images
             std::string connected_prefix = this->prefix + (this->prefix.empty() ? "" : "_");
-            std::filesystem::path file(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
             std::filesystem::path directory(this->directory);
-            std::filesystem::path fullPath = directory / file;
+            std::filesystem::path file;
+            std::filesystem::path fullPath;
 
-            cv::imwrite(fullPath.string(), thermalOut);
+            if (save_thermal) {
+                file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
+                fullPath = directory / file;
+                cv::imwrite(fullPath.string(), thermalOut);
+            }
+            
+            if (save_depth) {
+                file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_depth.png");
+                fullPath = directory / file;
+                cv::imwrite(fullPath.string(), depthOut);
+            }
+            
+            if (save_rgb) {
+                file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_rgb.png");
+                fullPath = directory / file;
+                cv::imwrite(fullPath.string(), rgbLight);
+            }
+            
         }
 
         for (cv::Mat mat : thermal_images) {
@@ -230,6 +304,9 @@ void PhotoShoot::PerformPostRenderingOperations()
             delete[] mat.ptr();
         }
         for (cv::Mat mat : rgb_dark_images) {
+            delete[] mat.ptr();
+        }
+        for (cv::Mat mat : depth_images) {
             delete[] mat.ptr();
         }
 
@@ -253,7 +330,7 @@ cv::Mat PhotoShoot::TakePictureThermal(const gz::rendering::ThermalCameraPtr _ca
             std::placeholders::_4, std::placeholders::_5));
     _camera->Update();
 
-    return cv::Mat(height, width, CV_16UC1, thermalData);;
+    return cv::Mat(height, width, CV_16UC1, thermalData);
 }
 
 cv::Mat PhotoShoot::TakePictureRGB(const gz::rendering::CameraPtr _camera,
@@ -271,4 +348,23 @@ cv::Mat PhotoShoot::TakePictureRGB(const gz::rendering::CameraPtr _camera,
     memcpy(rbgData, cameraImage.Data<uint8_t>(), width * height * 3 * sizeof(uint8_t));
 
     return cv::Mat(height, width, CV_8UC3, rbgData);
+}
+
+cv::Mat PhotoShoot::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
+                                const gz::math::Pose3d &_pose)
+{
+    unsigned int width = _camera->ImageWidth();
+    unsigned int height = _camera->ImageHeight();
+
+    _camera->SetWorldPose(_pose);
+
+    float *thermalData = new float[width * height];
+    gz::common::ConnectionPtr connection =
+      _camera->ConnectNewDepthFrame(
+          std::bind(&::OnNewDepthFrame, thermalData,
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+            std::placeholders::_4, std::placeholders::_5));
+    _camera->Update();
+
+    return cv::Mat(height, width, CV_32F, thermalData);
 }
