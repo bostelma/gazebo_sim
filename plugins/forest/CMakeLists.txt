@@ -52,3 +52,6 @@ target_link_libraries(Forest
     PRIVATE gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
     PRIVATE gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
 )
+
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION lib)

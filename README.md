@@ -60,16 +60,15 @@
     cd ~/gazebo_sim/plugins/forest  # change to 'person' and 'photo_shoot' respectively
 	mkdir build
 	cd build
-	cmake ..
+	cmake .. -DCMAKE_INSTALL_PREFIX=~/gazebo_sim/plugins/install
 	make
+    make install
     ```
 
 10. Setup all paths to make everything available in the current prompt:
     ```
 	export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:~/gazebo_sim/models
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/forest/build/lib
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/person/build/lib
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/photo_shoot/build/lib
+	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/install/lib
 	export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/python
 	export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/workspace/install/lib/python
     ```
@@ -163,10 +162,7 @@ This component adds python binding to msgs and transport and is required to use 
 12. Setup all paths to make everything available in the current prompt. If you don't use conda, replace the conda develop command with a respective export command like in step 10 of the ubuntu install instructions.
     ```
 	export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:~/gazebo_sim/models
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/forest/build/lib
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/person/build/lib
-	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/photo_shoot/build/lib
-    export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/swarm/build/lib
+	export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:~/gazebo_sim/plugins/install/lib
 	conda develop ~/gazebo_sim/python
     conda develop ~/gazebo_sim/workspace/install/lib/python
     conda develop ~/gazebo_sim/workspace/src/gz-python/build/python
