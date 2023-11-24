@@ -1,6 +1,6 @@
 ## Installation
 
-### Ubuntu
+### Ubuntu 22.04
 
 1. Update Ubuntu to make all packages available:
     ```
