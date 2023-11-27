@@ -52,3 +52,6 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
   PRIVATE ${OpenCV_LIBS}
 )
+
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION lib)
