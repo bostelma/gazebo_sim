@@ -1,0 +1,131 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%arguments
+
+	RESOURCE_PATH=""
+	PLUGIN_PATH=""
+
+%post
+
+	# Update to be able to get all packages
+	apt-get -y update	
+
+	# Install basic tools
+	apt-get -y install wget
+	
+	# get miniconda
+	cd /root
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	bash Miniconda3-latest-Linux-x86_64.sh -b -p /root/miniconda
+	. /root/miniconda/bin/activate
+	conda init
+
+	# create the conda environment and install packages
+	conda create -n gz-ws python=3.8
+	conda activate gz-ws
+	conda install protobuf=3.20.3
+	conda install conda-build
+	conda install -c conda-forge opencv
+	conda install -c conda-forge libstdcxx-ng
+
+	# Install tzdata in a non-interactive way
+	DEBIAN_FRONTEND=noninteractive
+	TZ=Europe/Berlin
+	apt-get -y install tzdata
+
+	# Get git and clone the source code into the root directory
+	apt-get -y install git
+	cd /root
+	git clone --recurse-submodules https://github.com/bostelma/gazebo_sim.git
+
+	# Get the necessary packages and software for gazebo itself
+	apt-get -y install python3-pip wget lsb-release gnupg curl
+
+	pip install vcstool
+	pip install -U colcon-common-extensions
+
+	wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+	apt-get -y update
+
+	cd gazebo_sim/workspace/src
+	apt -y install \
+			$(sort -u $(find . -iname 'packages-'`lsb_release -cs`'.apt' -o -iname 'packages.apt' | grep -v '/\.git/') | sed '/gz\|sdf/d' | tr '\n' ' ')
+
+	# Install additionaly packages and software for the own code    
+	apt-get -y install libopencv-dev python3-opencv
+	pip install --no-input dict2xml
+
+	# Install the correct version of protobuf 
+	cd /root
+	apt -y autoremove protobuf-compiler libprotobuf-dev libprotobuf-lite23
+	git clone https://github.com/google/protobuf.git
+	cd protobuf
+	git checkout tags/v21.5
+	git submodule init
+	git submodule update
+	mkdir build && cd build
+	cmake .. -DCMAKE_CXX_FLAGS="-fPIC"
+	make -j4
+	make install
+
+	# Set the python version for protobuf
+	export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=/root/miniconda/envs/gz-ws/bin/python
+
+	# Modify sdformat13 CMakeLists.txt
+	sed -i 's/(Python3 ${GZ_PYTHON_VERSION} REQUIRED COMPONENTS Development)/(Python3 ${GZ_PYTHON_VERSION} REQUIRED COMPONENTS Interpreter Development)/g' /root/gazebo_sim/workspace/src/sdformat/CMakeLists.txt
+
+	# Build Gazebo
+	cd /root/gazebo_sim/workspace
+        MAKEFLAGS="-j4" colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/root/miniconda/envs/gz-ws/bin/python -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
+
+	# Source Gazebo
+        . install/setup.sh
+
+	# Install gz-python
+	mkdir -p /root/gazebo_sim/workspace/src/gz-python/build
+	cd /root/gazebo_sim/workspace/src/gz-python/build
+	cmake ..
+	sed -i 's/SHARED/STATIC/g' /root/gazebo_sim/workspace/src/gz-python/build/_deps/pybind11_protobuf-src/CMakeLists.txt
+	make
+
+	# Set the resource path
+	if [ "{{ RESOURCE_PATH }}" = "" ]
+	then
+			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/root/gazebo_sim/models" >> $APPTAINER_ENVIRONMENT
+	else
+			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{{ RESOURCE_PATH }}" >> $APPTAINER_ENVIRONMENT
+	fi
+
+	# Build the plugins
+	if [ "{{ PLUGIN_PATH }}" = "" ]
+	then
+		mkdir -p /root/gazebo_sim/plugins/install
+		for plugin in forest person photo_shoot swarm camera_saver
+		do
+			cd /root/gazebo_sim/plugins/$plugin
+			mkdir build
+			cd build
+			cmake .. -DCMAKE_INSTALL_PREFIX=/root/gazebo_sim/plugins/install
+			make
+			make install
+		done
+		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:/root/gazebo_sim/plugins/install/lib" >> $APPTAINER_ENVIRONMENT
+	else
+		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:{{ PLUGIN_PATH }}" >> $APPTAINER_ENVIRONMENT
+	fi
+
+	# Add the python libraries to conda
+	conda develop /root/gazebo_sim/python
+	conda develop /root/gazebo_sim/workspace/install/lib/python
+	conda develop /root/gazebo_sim/workspace/src/gz-python/build/python
+
+%environment
+    . /root/gazebo_sim/workspace/install/setup.sh
+	. /root/miniconda/bin/activate
+	conda init
+	conda activate gz-ws
+	
+
+

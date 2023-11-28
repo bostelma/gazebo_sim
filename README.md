@@ -1,4 +1,31 @@
-## Installation
+# Installation
+
+## Apptainer
+
+1. Clone the simulator without the submodules that contain the gazebo source code.
+    ```
+    git clone https://github.com/bostelma/gazebo_sim.git
+    ```
+
+2. [Install Apptainer](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) using the official instructions.
+
+3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.8 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the models and plugins on the host system has to passed to the build command.
+    ```
+    cd ~/gazebo_sim/apptainer
+    mkdir -p ~/gazebo_sim/plugins/install
+    apptainer build --buil-arg RESOURCE_PATH=~/gazebo_sim/models --build-arg MODEL_PATH=~/gazebo_sim/plugins/install/lib gazebo_sim-basic.sif ubuntu-gazebo_sim-basic.def
+    ```
+
+4. Build the plugins: Forest, Person, Photo Shoot, and, in case of the full version, Swarm:
+    ```
+    cd ~/gazebo_sim/plugins/forest  # change to 'person', 'photo_shoot', ('swarm') respectively
+	mkdir build
+	cd build
+	cmake .. -DCMAKE_INSTALL_PREFIX=~/gazebo_sim/plugins/install
+	make
+    make install
+
+## Source Install 
 
 ### Ubuntu 22.04
 
@@ -169,6 +196,25 @@ This component adds python binding to msgs and transport and is required to use 
     ```
 
 ## Usage
+
+### Apptainer
+
+The general idea is that you work on the project files on the host system while using the environment that contains gazebo via apptainer.
+
+1. Start an named instance of your created image.
+    ```
+    apptainer instance start ~/gazebo_sim/apptainer/gazebo_sim-basic.sif gazebo
+    ```
+
+2. Start a shell within the container.
+    ```
+    apptainer shell instance://gazebo
+    ```
+
+3. Stop an instance once you are finished.
+    ```
+    apptainer instance stop gazebo
+    ```
 
 ### Photo Shoot
 
