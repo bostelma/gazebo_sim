@@ -12,12 +12,12 @@
 3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.8 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the models and plugins on the host system has to passed to the build command.
     ```
     cd ~/gazebo_sim/apptainer
-    mkdir -p ~/gazebo_sim/plugins/install
     apptainer build --buil-arg RESOURCE_PATH=~/gazebo_sim/models --build-arg MODEL_PATH=~/gazebo_sim/plugins/install/lib gazebo_sim-basic.sif ubuntu-gazebo_sim-basic.def
     ```
 
 4. Build the plugins: Forest, Person, Photo Shoot, and, in case of the full version, Swarm:
     ```
+    mkdir -p ~/gazebo_sim/plugins/install
     cd ~/gazebo_sim/plugins/forest  # change to 'person', 'photo_shoot', ('swarm') respectively
 	mkdir build
 	cd build
