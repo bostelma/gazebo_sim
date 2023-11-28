@@ -203,7 +203,7 @@ The general idea is that you work on the project files on the host system while 
 
 1. Start an named instance of your created image.
     ```
-    apptainer instance start ~/gazebo_sim/apptainer/gazebo_sim-basic.sif gazebo
+    apptainer instance start ~/gazebo_sim/apptainer/gazebo_sim-full.sif gazebo
     ```
 
 2. Start a shell within the container.
