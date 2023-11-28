@@ -26,11 +26,7 @@
         </plugin>
 
 
-        <plugin
-            filename="Swarm"
-            name="Swarm">
-        </plugin>
-  
+        
         <plugin
             filename="Forest"
             name="Forest">
