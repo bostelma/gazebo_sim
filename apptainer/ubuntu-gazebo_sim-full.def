@@ -26,7 +26,6 @@ From: ubuntu:22.04
 	conda activate gz-ws
 	conda install protobuf=3.20.3
 	conda install conda-build
-	conda install -c conda-forge opencv
 	conda install -c conda-forge libstdcxx-ng
 
 	# Install tzdata in a non-interactive way
@@ -56,6 +55,7 @@ From: ubuntu:22.04
 	# Install additionaly packages and software for the own code    
 	apt-get -y install libopencv-dev python3-opencv
 	pip install --no-input dict2xml
+	pip install opencv-python
 
 	# Install the correct version of protobuf 
 	cd /root

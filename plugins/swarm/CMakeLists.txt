@@ -50,7 +50,7 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME}
   PUBLIC gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
   PUBLIC gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
-  PRIVATE ${OpenCV_LIBS}
+  PUBLIC ${OpenCV_LIBS}
 )
 
 install(TARGETS ${PROJECT_NAME}
