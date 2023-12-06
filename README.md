@@ -15,15 +15,13 @@
     apptainer build --build-arg RESOURCE_PATH=~/gazebo_sim/models --build-arg PLUGIN_PATH=~/gazebo_sim/plugins/install/lib gazebo_sim-full.sif ubuntu-gazebo_sim-full.def
     ```
 
-4. Build the plugins: Forest, Person, Photo Shoot, and, in case of the full version, Swarm:
+4. Build the plugins using the provided script `build_plugins_basic.sh` or `build_plugins_full.sh`, depending on whether you have the basic or full version:
     ```
-    mkdir -p ~/gazebo_sim/plugins/install
-    cd ~/gazebo_sim/plugins/forest  # change to 'person', 'photo_shoot', ('swarm') respectively
-	mkdir build
-	cd build
-	cmake .. -DCMAKE_INSTALL_PREFIX=~/gazebo_sim/plugins/install
-	make
-    make install
+    apptainer shell gazebo_sim-full.sif
+    cd ../plugins
+    sh build_plugins_full.sh
+    exit
+    ```
 
 ## Source Install 
 
@@ -82,7 +80,7 @@
     . ~/gazebo_sim/workspace/install/setup.bash
     ```
 
-9. Build the basic plugins: Forest, Person, and Photo Shoot
+9. Build the basic plugins: Forest, Person, and Photo Shoot individually as seen below, or by executing the script `build_plugins_basic.sh` in the plugins directory.
     ```
     cd ~/gazebo_sim/plugins/forest  # change to 'person' and 'photo_shoot' respectively
 	mkdir build
@@ -184,7 +182,7 @@ This component adds python binding to msgs and transport and is required to use 
 
 10. Build gz-python using `make`
 
-11. Build the plugins as in step 8 of the ubuntu install instructions, but this time build the swarm plugin as well.
+11. Build the plugins as in step 8 of the ubuntu install instructions, but this time build the swarm plugin as well. Note, that you need to call `build_plugins_full.sh` this time to compile the swarm plugin as well.
 
 12. Setup all paths to make everything available in the current prompt. If you don't use conda, replace the conda develop command with a respective export command like in step 10 of the ubuntu install instructions.
     ```
