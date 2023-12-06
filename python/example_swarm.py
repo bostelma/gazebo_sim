@@ -30,8 +30,9 @@ if __name__ == "__main__":
     while time_passed < timeout:
 
         # All frames for a waypoint called send
-        # together, so it is enough to check one.
-        if swarm.received_frames[ids[0]]:
+        # together, so it is enough to check the
+        # last one.
+        if swarm.received_frames[ids[-1]]:
 
             for id in ids:
                 rgb_image = swarm.rgb_images[id]
