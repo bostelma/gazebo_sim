@@ -3,8 +3,8 @@ From: ubuntu:22.04
 
 %arguments
 
-	RESOURCE_PATH=""
-	PLUGIN_PATH=""
+	GZ_PATH=""
+	JUPYTER_PASSWORD=""
 
 %post
 
@@ -60,15 +60,15 @@ From: ubuntu:22.04
 	. install/setup.sh
 
 	# Set the resource path
-	if [ "{{ RESOURCE_PATH }}" = "" ]
-        then
-                echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/root/gazebo_sim/models" >> $APPTAINER_ENVIRONMENT
-        else
-                echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{{ RESOURCE_PATH }}" >> $APPTAINER_ENVIRONMENT
-        fi
+	if [ "{{ GZ_PATH }}" = "" ]
+	then
+			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/root/gazebo_sim/models" >> $APPTAINER_ENVIRONMENT
+	else
+			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{{ GZ_PATH }}/models" >> $APPTAINER_ENVIRONMENT
+	fi
 
 	# Build the plugins
-	if [ "{{ PLUGIN_PATH }}" = "" ]
+	if [ "{{ GZ_PATH }}" = "" ]
 	then
 		mkdir -p /root/gazebo_sim/plugins/install
 		for plugin in forest person photo_shoot camera_saver
@@ -76,16 +76,38 @@ From: ubuntu:22.04
 			cd /root/gazebo_sim/plugins/$plugin
 			mkdir build
 			cd build
-			cmake .. -DCMAKE_INSTALL_PREFIX=~/gazebo_sim/plugins/install
+			cmake .. -DCMAKE_INSTALL_PREFIX=/root/gazebo_sim/plugins/install
 			make
 			make install
 		done
 		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:/root/gazebo_sim/plugins/install/lib" >> $APPTAINER_ENVIRONMENT
 	else
-		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:{{ PLUGIN_PATH }}" >> $APPTAINER_ENVIRONMENT
+		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:{{ GZ_PATH }}/plugins/install/lib" >> $APPTAINER_ENVIRONMENT
+	fi
+
+	# Add the python libraries to the path
+	if [ "{{ GZ_PATH }}" = "" ]
+	then
+		echo "export PYTHONPATH=${PYTHONPATH}:/root/gazebo_sim/python" >> $APPTAINER_ENVIRONMENT
+	else
+		echo "export PYTHONPATH=${PYTHONPATH}:{{ GZ_PATH }}/python" >> $APPTAINER_ENVIRONMENT
+	fi
+	echo "export PYTHONPATH=${PYTHONPATH}:/root/gazebo_sim/workspace/install/lib/python" >> $APPTAINER_ENVIRONMENT
+
+	# Setup Jupyter
+	pip install notebook
+
+	# Set a password for jupyter if desired
+    if [ "{{ JUPYTER_PASSWORD }}" != "" ]
+	then
+        jupyter notebook --generate-config
+        PW_HASH=$(python3 -c \
+            "from jupyter_server.auth import passwd; print(passwd('{{ JUPYTER_PASSWORD }}'))")
+        echo "export JUPYTER_HASH='$PW_HASH'" >> $APPTAINER_ENVIRONMENT
 	fi
 
 %environment
-	export PYTHONPATH=${PYTHONPATH}:/root/gazebo_sim/python
-	export PYTHONPATH=${PYTHONPATH}:/root/gazebo_sim/workspace/install/lib/python
 	. /root/gazebo_sim/workspace/install/setup.sh
+
+%startscript
+    jupyter notebook --port 8850 --NotebookApp.password="$JUPYTER_HASH"

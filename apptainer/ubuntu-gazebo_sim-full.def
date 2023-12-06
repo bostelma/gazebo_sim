@@ -3,8 +3,8 @@ From: ubuntu:22.04
 
 %arguments
 
-	RESOURCE_PATH=""
-	PLUGIN_PATH=""
+	GZ_PATH=""
+	JUPYTER_PASSWORD=""
 
 %post
 
@@ -78,10 +78,10 @@ From: ubuntu:22.04
 
 	# Build Gazebo
 	cd /root/gazebo_sim/workspace
-        MAKEFLAGS="-j4" colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/root/miniconda/envs/gz-ws/bin/python -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
+    MAKEFLAGS="-j4" colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/root/miniconda/envs/gz-ws/bin/python -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
 
 	# Source Gazebo
-        . install/setup.sh
+    . install/setup.sh
 
 	# Install gz-python
 	mkdir -p /root/gazebo_sim/workspace/src/gz-python/build
@@ -91,15 +91,15 @@ From: ubuntu:22.04
 	make
 
 	# Set the resource path
-	if [ "{{ RESOURCE_PATH }}" = "" ]
+	if [ "{{ GZ_PATH }}" = "" ]
 	then
 			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/root/gazebo_sim/models" >> $APPTAINER_ENVIRONMENT
 	else
-			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{{ RESOURCE_PATH }}" >> $APPTAINER_ENVIRONMENT
+			echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{{ GZ_PATH }}/models" >> $APPTAINER_ENVIRONMENT
 	fi
 
 	# Build the plugins
-	if [ "{{ PLUGIN_PATH }}" = "" ]
+	if [ "{{ GZ_PATH }}" = "" ]
 	then
 		mkdir -p /root/gazebo_sim/plugins/install
 		for plugin in forest person photo_shoot swarm camera_saver
@@ -113,13 +113,30 @@ From: ubuntu:22.04
 		done
 		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:/root/gazebo_sim/plugins/install/lib" >> $APPTAINER_ENVIRONMENT
 	else
-		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:{{ PLUGIN_PATH }}" >> $APPTAINER_ENVIRONMENT
+		echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:{{ GZ_PATH }}/plugins/install/lib" >> $APPTAINER_ENVIRONMENT
 	fi
 
 	# Add the python libraries to conda
-	conda develop /root/gazebo_sim/python
+	if [ "{{ GZ_PATH }}" = "" ]
+	then
+		conda develop /root/gazebo_sim/python
+	else
+		conda develop {{ GZ_PATH }}/python
+	fi
 	conda develop /root/gazebo_sim/workspace/install/lib/python
 	conda develop /root/gazebo_sim/workspace/src/gz-python/build/python
+
+	# Setup Jupyter
+	conda install -c conda-forge notebook
+
+	# Set a password for jupyter if desired
+    if [ "{{ JUPYTER_PASSWORD }}" != "" ]
+	then
+        jupyter notebook --generate-config
+        PW_HASH=$(python3 -c \
+            "from jupyter_server.auth import passwd; print(passwd('{{ JUPYTER_PASSWORD }}'))")
+        echo "export JUPYTER_HASH='$PW_HASH'" >> $APPTAINER_ENVIRONMENT
+	fi
 
 %environment
     . /root/gazebo_sim/workspace/install/setup.sh
@@ -127,5 +144,5 @@ From: ubuntu:22.04
 	conda init
 	conda activate gz-ws
 	
-
-
+%startscript
+    jupyter notebook --port 8850 --NotebookApp.password="$JUPYTER_HASH"

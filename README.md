@@ -9,10 +9,10 @@
 
 2. [Install Apptainer](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) using the official instructions.
 
-3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.8 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the models and plugins on the host system has to passed to the build command.
+3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.8 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command.
     ```
     cd ~/gazebo_sim/apptainer
-    apptainer build --build-arg RESOURCE_PATH=~/gazebo_sim/models --build-arg PLUGIN_PATH=~/gazebo_sim/plugins/install/lib gazebo_sim-full.sif ubuntu-gazebo_sim-full.def
+    apptainer build --build-arg GZ_PATH=~/gazebo_sim gazebo_sim-full.sif ubuntu-gazebo_sim-full.def
     ```
 
 4. Build the plugins using the provided script `build_plugins_basic.sh` or `build_plugins_full.sh`, depending on whether you have the basic or full version:
@@ -213,6 +213,8 @@ The general idea is that you work on the project files on the host system while 
     ```
     apptainer instance stop gazebo
     ```
+
+To be able to work on notebooks while using the container environment, the container feature a jupyter server that is running when starting an instance as described above. To get the address and the required token, execute `jupyter notebook list` from within the container. If you want to use an password instead, you need to add it to the build command: `--build-arg JUPYTER_PASSWORD=my_secure_password`. Make sure to use a secure password as it prevents others from executing code on your machine!
 
 ### Photo Shoot
 
