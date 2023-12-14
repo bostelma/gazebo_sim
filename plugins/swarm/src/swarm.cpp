@@ -292,10 +292,14 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
     }
 
     // Disable lights
+    std::vector<double> intensities;
     for (unsigned int i = 0; i < scene->LightCount(); ++i) {
         auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
         if (light != nullptr) {
+            intensities.push_back(light->Intensity());
             light->SetIntensity(0.0);
+        } else {
+            intensities.push_back(0.0);
         }
     }
 
@@ -305,6 +309,14 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
         cv::Mat mat = this->TakePictureRGB(rgb_camera, poses[i]);
         cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
         rgb_dark_images.push_back(mat);
+    }
+
+    // Enable lights
+    for (unsigned int i = 0; i < scene->LightCount(); ++i) {
+        auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
+        if (light != nullptr) {
+            light->SetIntensity(intensities.at(i));
+        }
     }
 
     // Compute thermal output
