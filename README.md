@@ -280,6 +280,12 @@ Do a photo shoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.s
 - cmake for sdformat fails due to Module.Development not found
     Add Interpreter as required component in sdformat/CMakeLists.txt:148 `find_package(Python3 ${GZ_PYTHON_VERSION} REQUIRED COMPONENTS Interpreter Development)`
 
+- The light source itself gets rendered in the form of a square:
+
+    ![Image of rendered light source](resources/rendered_light_source.png)
+
+    This behavior can be disabled by adding the tag `<visualize>false</visualize>` within the light tag in the respective world file, or by calling `light.set_visualize(False)` in the respective Python file. Unfortunately, this setting is getting lost when saving the world file to the disk from within the Python file. Therefore, currently, it is required to add this tag manually, or via `sed` or another similar command.
+
 ## BUGS
 - one tree with two species, 0.5 each produces error
 - crash on reset:   [Err] [SceneManager.cc:223] Visual: [Procedural Forest] already exists

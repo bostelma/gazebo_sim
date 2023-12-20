@@ -15,6 +15,10 @@
             <render_engine>ogre2</render_engine>
             <background_color>1, 1, 1</background_color>
         </plugin>
+        <plugin
+            filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster">
+        </plugin>
 
         <plugin
             filename="Person"
@@ -168,6 +172,7 @@
         </scene>
         <light type="directional" name="sun">
             <cast_shadows>true</cast_shadows>
+            <visualize>false</visualize>
             <pose>0 0 100 0 0 0</pose>
             <diffuse>0.8 0.8 0.8 1</diffuse>
             <specular>0.2 0.2 0.2 1</specular>
