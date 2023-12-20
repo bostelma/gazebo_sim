@@ -179,6 +179,10 @@ class Swarm:
             
             request.pose.append(pose_msg)
 
+            self.received_frames[id] = False
+            self.rgb_images[id] = None
+            self.thermal_images[id] = None
+
         rep_msg_type_name = Boolean.DESCRIPTOR.full_name
         suc, ret = node.request(self.waypoint_topic, request, self.timeout, rep_msg_type_name)
 

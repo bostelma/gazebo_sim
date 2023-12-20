@@ -14,36 +14,42 @@ if __name__ == "__main__":
     # Spawn 4 drones and keep the returning ids as handles
     ids = swarm.spawn(4)
 
-    # Set the first waypoints for all our drones
-    swarm.waypoints(ids, np.array([
+    # First waypoints
+    waypoints = np.array([
         [-2.0,-2.0, 30.0],
         [ 2.0,-2.0, 30.0],
         [-2.0, 2.0, 30.0],
         [ 2.0, 2.0, 30.0],
-    ]))
+    ])
 
-    # Wait until the data has arrived
-    time_delta = 0.01           # Delta time per sleep command in seconds
-    time_passed = 0.0           # Time counter to keep track of the time in seconds
-    timeout = 1.0               # Timeout in case something goes wrong
+    for d_z in range(0, 30, 5):
 
-    while time_passed < timeout:
+        # Set the waypoints for all drones
+        current_waypoints = waypoints - np.array([0.0, 0.0, d_z])
+        swarm.waypoints(ids, current_waypoints)
 
-        # All frames for a waypoint called send
-        # together, so it is enough to check the
-        # last one.
-        if swarm.received_frames[ids[-1]]:
+        # Wait until the data has arrived
+        time_delta = 0.01           # Delta time per sleep command in seconds
+        time_passed = 0.0           # Time counter to keep track of the time in seconds
+        timeout = 1.0               # Timeout in case something goes wrong
 
-            for id in ids:
-                rgb_image = swarm.rgb_images[id]
-                thermal_image = swarm.thermal_images[id]
+        while time_passed < timeout:
 
-                # In this example we only store them in a data directory
-                # OpenCV expects BGR but it is RGB, so switch the channels
-                cv2.imwrite(f"../../data/swarm/rgb_image_drone_{id}.png", cv2.cvtColor(rgb_image, cv2.COLOR_BGR2RGB))    
-                cv2.imwrite(f"../../data/swarm/thermal_image_drone_{id}.png", thermal_image)
+            # All frames for a waypoint called send
+            # together, so it is enough to check the
+            # last one.
+            if swarm.received_frames[ids[-1]]:
 
-            break
-        
-        time.sleep(time_delta)
-        time_passed += time_delta
+                for id in ids:
+                    rgb_image = swarm.rgb_images[id]
+                    thermal_image = swarm.thermal_images[id]
+
+                    # In this example we only store them in a data directory
+                    # OpenCV expects BGR but it is RGB, so switch the channels
+                    cv2.imwrite(f"../../data/swarm/rgb_image_drone_{id}_dz_{d_z}.png", cv2.cvtColor(rgb_image, cv2.COLOR_BGR2RGB))    
+                    cv2.imwrite(f"../../data/swarm/thermal_image_drone_{id}_dz_{d_z}.png", thermal_image)
+
+                break
+            
+            time.sleep(time_delta)
+            time_passed += time_delta
