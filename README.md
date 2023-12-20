@@ -9,7 +9,7 @@
 
 2. [Install Apptainer](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) using the official instructions.
 
-3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.8 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command.
+3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.7.9 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command.
     ```
     cd ~/gazebo_sim/apptainer
     apptainer build --build-arg GZ_PATH=~/gazebo_sim gazebo_sim-full.sif ubuntu-gazebo_sim-full.def
@@ -123,7 +123,7 @@
     sudo chmod ugo+rwx dev/dri/*
     ```
 
-### Additional Component: gz-python
+### Full installation with python bindings
 
 This component adds python binding to msgs and transport and is required to use the swarm functionality.
 
@@ -133,7 +133,7 @@ This component adds python binding to msgs and transport and is required to use 
     sudo apt-get upgrade
     ```
 
-2. Setup a python 3.8 environment, for example using conda and install protobuf==3.20.3, opencv, libstdcxx-ng, and conda-build
+2. Setup a python 3.7 environment, for example using conda and install protobuf==3.20.3, opencv=4.5.5.64, libstdcxx-ng, and conda-build
     ```
     cd
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -141,12 +141,11 @@ This component adds python binding to msgs and transport and is required to use 
     ```
     Restart the shell by closing and reopening it.
     ```
-    conda create -n gz-ws python=3.8
+    conda create -n gz-ws python=3.7.9
     conda activate gz-ws
     conda install protobuf=3.20.3
-    conda install conda-build
-    conda install -c conda-forge opencv
-    conda install -c conda-forge libstdcxx-ng
+    conda install conda-build libstdcxx-ng
+    pip install opencv==4.5.5.64
     ```
 
 3. Follow steps 2 through 5 of the ubuntu install instructions and install the correct libogre version if you are using windows.
@@ -163,7 +162,7 @@ This component adds python binding to msgs and transport and is required to use 
     ```
     cd ~/gazebo_sim/workspace
     export MAKEFLAGS="-j4"
-    colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=[path to your python] -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
+    colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=[path to your python] -DGZ_PYTHON_VERSION=3.7 --packages-ignore gz-python --executor sequential
     ```
 
 7. Source the Gazebo workspace to make it available in the current prompt:

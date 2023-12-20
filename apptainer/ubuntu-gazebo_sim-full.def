@@ -22,7 +22,7 @@ From: ubuntu:22.04
 	conda init
 
 	# create the conda environment and install packages
-	conda create -n gz-ws python=3.8
+	conda create -n gz-ws python=3.7.9
 	conda activate gz-ws
 	conda install protobuf=3.20.3
 	conda install conda-build
@@ -55,7 +55,7 @@ From: ubuntu:22.04
 	# Install additionaly packages and software for the own code    
 	apt-get -y install libopencv-dev python3-opencv
 	pip install --no-input dict2xml
-	pip install opencv-python
+	pip install opencv-python==4.5.5.64
 
 	# Install the correct version of protobuf 
 	cd /root
@@ -78,7 +78,7 @@ From: ubuntu:22.04
 
 	# Build Gazebo
 	cd /root/gazebo_sim/workspace
-    MAKEFLAGS="-j4" colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/root/miniconda/envs/gz-ws/bin/python -DGZ_PYTHON_VERSION=3.8 --packages-ignore gz-python --executor sequential
+    MAKEFLAGS="-j4" colcon build --symlink-install --merge-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/root/miniconda/envs/gz-ws/bin/python -DGZ_PYTHON_VERSION=3.7 --packages-ignore gz-python --executor sequential
 
 	# Source Gazebo
     . install/setup.sh
@@ -127,6 +127,8 @@ From: ubuntu:22.04
 	conda develop /root/gazebo_sim/workspace/src/gz-python/build/python
 
 	# Setup Jupyter
+wget http://es.archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb
+	dpkg -i libffi7_3.3-4_amd64.deb
 	conda install -c conda-forge notebook
 
 	# Set a password for jupyter if desired
