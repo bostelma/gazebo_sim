@@ -322,10 +322,11 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
     // Compute thermal output
     std::vector<std::pair<cv::Mat, cv::Mat>> images;
     for (unsigned int i = 0; i < rgb_light_images.size(); i++) {
-        cv::Mat &rgbLight = rgb_light_images.at(i);
-        cv::Mat &rgbDark = rgb_dark_images.at(i);
+        cv::Mat rgbLight = rgb_light_images.at(i).clone();
+        cv::Mat rgbDark = rgb_dark_images.at(i).clone();
+        cv::Mat thermal_raw = thermal_images.at(i).clone();
         cv::Mat thermal;
-        thermal_images.at(i).convertTo(thermal, CV_32F);
+        thermal_raw.convertTo(thermal, CV_32F);
         thermal = thermal * thermal_camera->LinearResolution();
 
         // Calculate the brightness values of both rgb images
@@ -375,6 +376,16 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
         images.push_back(std::make_pair(rgbLight, thermalOut));
     }
 
+    for (cv::Mat mat : thermal_images) {
+        delete[] mat.ptr();
+    }
+    for (cv::Mat mat : rgb_light_images) {
+        delete[] mat.ptr();
+    }
+    for (cv::Mat mat : rgb_dark_images) {
+        delete[] mat.ptr();
+    }
+    
     return images;
 }
 
