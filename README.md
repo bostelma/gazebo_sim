@@ -107,8 +107,8 @@
 3. Install a specific OGRE2 version that contains a WSL specific bug fix:
     ```
     sudo apt remove libogre-next-2.3.0 libogre-next-2.3-dev
-	curl -o libogre-next-2.3_2.3.1-4osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/lastSuccessfulBuild/artifact/pkgs/libogre-next-2.3.0_2.3.1-4osrf%7Ejammy_amd64.deb
-	curl -o libogre-next-2.3-dev_2.3.1-4osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/lastSuccessfulBuild/artifact/pkgs/libogre-next-2.3-dev_2.3.1-4osrf%7Ejammy_amd64.deb
+	curl -o libogre-next-2.3_2.3.1-4osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/54/artifact/pkgs/libogre-next-2.3.0_2.3.1-4osrf%7Ejammy_amd64.deb
+	curl -o libogre-next-2.3-dev_2.3.1-4osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/54/artifact/pkgs/libogre-next-2.3-dev_2.3.1-4osrf%7Ejammy_amd64.deb
 	sudo apt install ./libogre-next-2.3_2.3.1-4osrf~jammy_amd64.deb
 	sudo apt install ./libogre-next-2.3-dev_2.3.1-4osrf~jammy_amd64.deb
 	cd /usr/include
