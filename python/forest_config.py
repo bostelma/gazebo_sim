@@ -22,6 +22,16 @@ class ForestConfig(PluginConfig):
 
         self._write_content()
 
+    def enable_debug(self, path):
+        self.config["debug_forest"] = True
+        self.config["debug_path"] = path
+        self._write_content()
+
+    def disable_debug(self):
+        self.config["debug_forest"] = False
+        self.config["debug_path"] = ""
+        self._write_content()
+
     def set_generate(self, generate):
         self.config["generate"] = generate
         self._write_content()

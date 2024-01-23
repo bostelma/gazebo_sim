@@ -56,6 +56,15 @@ class Forest
 
     private:
 
+        struct debugData {
+            std::string species;    // species name
+            double x;               // x coordinate in meters, 0,0 in the middle
+            double y;               // y coordinate in meters, 0,0 in the middle
+            double orientation;     // orientation in radians
+            int seed;               // seed for procedural generation
+        };
+
+        bool debugForest{false};
         bool generateForest{true};
         bool directSpawning{false};
 
@@ -63,11 +72,13 @@ class Forest
         float trunkTemperature{288.15};
         float twigsTemperature{288.15};
 
+        int seed;
         int forestSize;
         int nTrees;
 
         std::mt19937 rng;
 
+        std::string debugPath{""};
         std::string modelName;
         std::string modelPath;
         std::string modelString;
@@ -80,6 +91,7 @@ class Forest
         std::vector<std::string> speciesNames;
         std::vector<std::string> trunkTextureStrs;
         std::vector<std::string> twigsTextureStrs;
+        std::vector<debugData> debugDataVec;
 
 
 };

@@ -73,14 +73,13 @@ void Forest::Reset(const gz::sim::UpdateInfo &_info,
 bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
 {
     // If a seed is given, use it, otherwise start with a random seed
-    int seed;
     if (_sdf->HasElement("seed")) {
-        seed = _sdf->Get<int>("seed");
+        this->seed = _sdf->Get<int>("seed");
     } else {
         std::random_device rd;
-        seed = rd();
+        this->seed = rd();
     }
-    this->rng.seed(seed);
+    this->rng.seed(this->seed);
 
     // Use a sqaure forest with a width and height of 'size'
     if (_sdf->HasElement("size")) {
@@ -94,6 +93,19 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
     this->generateForest = true;
     if (_sdf->HasElement("generate")) {
         this->generateForest = _sdf->Get<bool>("generate");
+    }
+
+    // Check if a debug file should be generated
+    if (_sdf->HasElement("debug_forest")) {
+        this->debugForest = _sdf->Get<bool>("debug_forest");
+        if (this->debugForest) {
+            if (_sdf->HasElement("debug_path")) {
+                this->debugPath = _sdf->Get<std::string>("debug_path");
+            } else {
+                std::cerr << "[Forest] Debug path is missing, use <debug_path> tag to specify!" << std::endl;
+                return false;
+            }
+        }
     }
 
     // Check if temperatur values are given
@@ -184,6 +196,9 @@ bool Forest::GenerateGround(sdf::ElementPtr _sdf) {
 bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
 {
 
+    // Clear the debug data vector
+    this->debugDataVec.clear();
+
     // Distribution to give each tree a different seed and rotation
     std::uniform_int_distribution<int> treeSeedDistribution(0, INT_MAX / 4);
     std::uniform_real_distribution<double> treeRotDistribution(0, 2 * M_PI);
@@ -264,8 +279,11 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
 
         for (int i = 0; i < nSpeciesTrees && treesPlanted < nTrees; i++) {
 
+            debugData debugDataEntry;
+
             // Generate A Tree
-            Tree tree(treeSeedDistribution(this->rng));
+            int treeSeed = treeSeedDistribution(this->rng);
+            Tree tree(treeSeed);
             if (speciesSDF->HasElement("tree_properties")) {
                 sdf::ElementPtr treePropertiesSDF = speciesSDF->GetElement("tree_properties");
                 std::set<std::string> childNames = treePropertiesSDF->GetElementTypeNames();
@@ -273,7 +291,9 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
                     tree.SetProperty(childName, treePropertiesSDF->GetAny(childName), homogeneity);
                 }
             }
-            tree.Generate(treeRotDistribution(this->rng));
+
+            double treeOrientation = treeRotDistribution(this->rng);
+            tree.Generate(treeOrientation);
 
             gz::common::SubMeshPtr trunkSubMesh = createTrunkMeshFromTree(tree);
             gz::common::SubMeshPtr twigsSubMesh = createTwigsMeshFromTree(tree);
@@ -288,6 +308,16 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
 
             gz::common::MeshManager::Instance()->AddMesh(trunkMesh);
             gz::common::MeshManager::Instance()->AddMesh(twigsMesh);
+
+            // Handle debug data
+            if (this->debugForest) {
+                debugDataEntry.species = speciesName;
+                debugDataEntry.x = treePositions.at(treesPlanted).X();
+                debugDataEntry.y = treePositions.at(treesPlanted).Y();
+                debugDataEntry.orientation = treeOrientation;
+                debugDataEntry.seed = treeSeed;
+                this->debugDataVec.push_back(debugDataEntry);
+            }
 
             treesPlanted++;
         }
@@ -329,6 +359,23 @@ bool Forest::GenerateTrees(sdf::ElementPtr _sdf)
 
         // Look for the next species tag
         speciesSDF = speciesSDF->GetNextElement("species");
+    }
+
+    // Store debug data
+    if (this->debugForest) {
+        std::string debugPath = this->debugPath + "/forest.csv";
+        std::ofstream myFile;
+        myFile.open(debugPath);
+        if (!myFile.is_open()) {
+            std::cerr << "[Forest] Unable to open debug file: " << debugPath << std::endl;
+            return false;
+        }
+        myFile << "Overall Seed: " << this->seed << std::endl;
+        myFile << "species,x,y,orientation,seed" << std::endl;
+        for (debugData debugDataEntry : this->debugDataVec) {
+            myFile << debugDataEntry.species << "," << debugDataEntry.x << "," << debugDataEntry.y << "," << debugDataEntry.orientation << "," << debugDataEntry.seed << std::endl;
+        }
+        myFile.close();
     }
 
     return true;
