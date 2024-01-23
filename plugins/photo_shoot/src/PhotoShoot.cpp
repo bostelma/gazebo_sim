@@ -151,125 +151,152 @@ void PhotoShoot::PerformPostRenderingOperations()
             }
         }
 
+        std::cout << "Save Thermal: " << this->save_thermal << std::endl;
+        std::cout << "Save RGB: " << this->save_rgb << std::endl;
+        std::cout << "Save Depth: " << this->save_depth << std::endl;
+
         // Take the thermal images
         std::vector<cv::Mat> thermal_images;
-        for (std::size_t i = 0; i < this->poses.size(); i++) {
-            thermal_images.push_back(this->TakePictureThermal(thermal_camera, this->poses[i]));
+        if (this->save_thermal) {
+            for (std::size_t i = 0; i < this->poses.size(); i++) {
+                thermal_images.push_back(this->TakePictureThermal(thermal_camera, this->poses[i]));
+            }
+            std::cout << "Took thermal images" << std::endl;
         }
 
         // Take normal rgb images
         std::vector<cv::Mat> rgb_light_images;
-        for (std::size_t i = 0; i < this->poses.size(); i++) {
-            cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
-            cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
-            rgb_light_images.push_back(mat);
+        if (this->save_rgb || this->save_thermal) {
+            for (std::size_t i = 0; i < this->poses.size(); i++) {
+                cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
+                cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
+                rgb_light_images.push_back(mat);
+            }
+            std::cout << "Took rgb images" << std::endl;
         }
 
         // Take depth images
         std::vector<cv::Mat> depth_images;
-        for (std::size_t i = 0; i < this->poses.size(); i++) {
-            depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));
+        if (this->save_depth) {
+            for (std::size_t i = 0; i < this->poses.size(); i++) {
+                depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));
+            }
+            std::cout << "Took depth images" << std::endl;
         }
 
-        // Disable lights
-        for (unsigned int i = 0; i < scene->LightCount(); ++i) {
-            auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
-            if (light != nullptr) {
-                light->SetIntensity(0.0);
-            }
-        }
 
         // Take rgb images with only ambient lighting
         std::vector<cv::Mat> rgb_dark_images;
-        for (std::size_t i = 0; i < this->poses.size(); i++) {
-            cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
-            cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
-            rgb_dark_images.push_back(mat);
+        if (this->save_thermal) {
+            
+            for (unsigned int i = 0; i < scene->LightCount(); ++i) {
+                auto light = std::dynamic_pointer_cast<gz::rendering::Light>(scene->LightByIndex(i));
+                if (light != nullptr) {
+                    light->SetIntensity(0.0);
+                }
+            }
+
+            for (std::size_t i = 0; i < this->poses.size(); i++) {
+                cv::Mat mat = this->TakePictureRGB(rgb_camera, this->poses[i]);
+                cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
+                rgb_dark_images.push_back(mat);
+            }
+            std::cout << "Took dark rgb images" << std::endl;
         }
 
         // Compute outputs
-        for (unsigned int i = 0; i < rgb_light_images.size(); i++) {
+        for (unsigned int i = 0; i < this->poses.size(); i++) {
 
             // Process Depth image
-            cv::Mat &depth = depth_images.at(i);
-
-            depth += this->depth_offset;
-            depth *= this->depth_scale;
-
             cv::Mat depthOut;
-            depth.convertTo(depthOut, CV_16U);
+            if (this->save_depth) {
+                cv::Mat &depth = depth_images.at(i);
+
+                depth += this->depth_offset;
+                depth *= this->depth_scale;
+
+                depth.convertTo(depthOut, CV_16U);
+            }            
 
             // Process Thermal image
-            cv::Mat &rgbLight = rgb_light_images.at(i);
-            cv::Mat &rgbDark = rgb_dark_images.at(i);
-            cv::Mat thermal;
-            thermal_images.at(i).convertTo(thermal, CV_32F);
-            thermal = thermal * thermal_camera->LinearResolution();
+            cv::Mat thermalOut;
+            if (this->save_thermal) {
 
-            //cv::imwrite("../../data/photo_shoot/rgbLight.png", rgbLight);
-            //cv::imwrite("../../data/photo_shoot/rgbDark.png", rgbDark);
+                std::cout << "Number of rgb_light_images: " << rgb_light_images.size() << std::endl;
+                std::cout << "Number of rgb_dark_images: " << rgb_dark_images.size() << std::endl;
+                std::cout << "Number of thermal_images: " << thermal_images.size() << std::endl;
 
-            // Calculate the brightness values of both rgb images
-            // as grayscale images in the range from 0 to 1
-            cv::Mat brightnessLight, brightnessDark;
-            cv::cvtColor(rgbLight, brightnessLight, cv::COLOR_RGB2GRAY);
-            cv::cvtColor(rgbDark, brightnessDark, cv::COLOR_RGB2GRAY);
-            brightnessLight.convertTo(brightnessLight, CV_32F);
-            brightnessDark.convertTo(brightnessDark, CV_32F);
-            brightnessLight /= 255.0;
-            brightnessDark /= 255.0;
+                cv::Mat &rgbLight = rgb_light_images.at(i);
+                cv::Mat &rgbDark = rgb_dark_images.at(i);
+                cv::Mat thermal;
+                thermal_images.at(i).convertTo(thermal, CV_32F);
+                thermal = thermal * thermal_camera->LinearResolution();
 
-            //cv::imwrite("../../data/photo_shoot/brightnessLight.png", brightnessLight * 255.0);
-            //cv::imwrite("../../data/photo_shoot/brightnessDark.png", brightnessDark * 255.0);
+                //cv::imwrite("../../data/photo_shoot/rgbLight.png", rgbLight);
+                //cv::imwrite("../../data/photo_shoot/rgbDark.png", rgbDark);
 
-            // Calculate the difference between the two brightness
-            // images, which indicates the effect of the sun
-            cv::Mat lightInfluence;
-            cv::subtract(brightnessLight, brightnessDark, lightInfluence);
+                // Calculate the brightness values of both rgb images
+                // as grayscale images in the range from 0 to 1
+                cv::Mat brightnessLight, brightnessDark;
+                cv::cvtColor(rgbLight, brightnessLight, cv::COLOR_RGB2GRAY);
+                cv::cvtColor(rgbDark, brightnessDark, cv::COLOR_RGB2GRAY);
+                brightnessLight.convertTo(brightnessLight, CV_32F);
+                brightnessDark.convertTo(brightnessDark, CV_32F);
+                brightnessLight /= 255.0;
+                brightnessDark /= 255.0;
 
-            //cv::imwrite("../../data/photo_shoot/lightInfluence.png", lightInfluence * 255.0);
+                //cv::imwrite("../../data/photo_shoot/brightnessLight.png", brightnessLight * 255.0);
+                //cv::imwrite("../../data/photo_shoot/brightnessDark.png", brightnessDark * 255.0);
 
-            // Calculate the direct light contribution
-            cv::Mat directLightContribution;
-            cv::multiply((1.0 - brightnessDark), lightInfluence, directLightContribution);
+                // Calculate the difference between the two brightness
+                // images, which indicates the effect of the sun
+                cv::Mat lightInfluence;
+                cv::subtract(brightnessLight, brightnessDark, lightInfluence);
 
-            //cv::imwrite("../../data/photo_shoot/directLightContribution.png", directLightContribution * 255.0);
+                //cv::imwrite("../../data/photo_shoot/lightInfluence.png", lightInfluence * 255.0);
 
-            // Convert contributions to kelvin
-            cv::Mat directLightContributionThermal;
-            cv::multiply(directLightContribution, this->direct_thermal_factor,  directLightContributionThermal);
+                // Calculate the direct light contribution
+                cv::Mat directLightContribution;
+                cv::multiply((1.0 - brightnessDark), lightInfluence, directLightContribution);
 
-            cv::Mat indirectLightContributionThermal;
-            cv::multiply((1.0 - brightnessDark), this->indirect_thermal_factor, indirectLightContributionThermal);
+                //cv::imwrite("../../data/photo_shoot/directLightContribution.png", directLightContribution * 255.0);
 
-            // Calculate the final thermal image
-            float res = thermal_camera->LinearResolution();
-            float absMin = thermal_camera->MinTemperature();
-            float absMax = thermal_camera->MaxTemperature();
-            float minTemp = 288.15;
-            float maxTemp = 303.15;
+                // Convert contributions to kelvin
+                cv::Mat directLightContributionThermal;
+                cv::multiply(directLightContribution, this->direct_thermal_factor,  directLightContributionThermal);
 
-            cv::Mat thermalOut = thermal + directLightContributionThermal + indirectLightContributionThermal;
+                cv::Mat indirectLightContributionThermal;
+                cv::multiply((1.0 - brightnessDark), this->indirect_thermal_factor, indirectLightContributionThermal);
 
-            //double min, max;
-            //cv::minMaxLoc(thermal, &min, &max);
-            //std::cout << "Original Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
-            //cv::minMaxLoc(directLightContributionThermal, &min, &max);
-            //std::cout << "Direct Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
-            //cv::minMaxLoc(indirectLightContributionThermal, &min, &max);
-            //std::cout << "Indirect Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+                // Calculate the final thermal image
+                float res = thermal_camera->LinearResolution();
+                float absMin = thermal_camera->MinTemperature();
+                float absMax = thermal_camera->MaxTemperature();
+                float minTemp = 288.15;
+                float maxTemp = 303.15;
 
-            cv::Mat mask;
-            //cv::inRange(thermal, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
-            //thermal.copyTo(thermal, mask);
-            //thermal = (thermal - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+                thermalOut = thermal + directLightContributionThermal + indirectLightContributionThermal;
 
-            cv::inRange(thermalOut, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
-            thermalOut.copyTo(thermalOut, mask);
-            thermalOut = (thermalOut - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+                //double min, max;
+                //cv::minMaxLoc(thermal, &min, &max);
+                //std::cout << "Original Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+                //cv::minMaxLoc(directLightContributionThermal, &min, &max);
+                //std::cout << "Direct Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
+                //cv::minMaxLoc(indirectLightContributionThermal, &min, &max);
+                //std::cout << "Indirect Light Contribution Thermal: Min = " + std::to_string(min) + ", Max = " + std::to_string(max) << std::endl;
 
-            //cv::imwrite("../../data/photo_shoot/thermalIn.png", thermal);
-            //cv::imwrite("../../data/photo_shoot/thermalOut.png", thermalOut);
+                cv::Mat mask;
+                //cv::inRange(thermal, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
+                //thermal.copyTo(thermal, mask);
+                //thermal = (thermal - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+
+                cv::inRange(thermalOut, cv::Scalar(this->lower_thermal_threshold), cv::Scalar(this->upper_thermal_threshold), mask);
+                thermalOut.copyTo(thermalOut, mask);
+                thermalOut = (thermalOut - this->lower_thermal_threshold) / (this->upper_thermal_threshold - this->lower_thermal_threshold) * 255;
+
+                //cv::imwrite("../../data/photo_shoot/thermalIn.png", thermal);
+                //cv::imwrite("../../data/photo_shoot/thermalOut.png", thermalOut);
+            }
 
             // Save images
             std::string connected_prefix = this->prefix + (this->prefix.empty() ? "" : "_");
@@ -277,22 +304,27 @@ void PhotoShoot::PerformPostRenderingOperations()
             std::filesystem::path file;
             std::filesystem::path fullPath;
 
-            if (save_thermal) {
+            if (this->save_thermal) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
                 fullPath = directory / file;
                 cv::imwrite(fullPath.string(), thermalOut);
             }
             
-            if (save_depth) {
+            std::cout << "Ich bin noch hier" << std::endl;
+            if (this->save_depth) {
+                std::cout << "Pre: Saved depth image" << std::endl;
+
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_depth.png");
                 fullPath = directory / file;
                 cv::imwrite(fullPath.string(), depthOut);
+
+                std::cout << "Saved depth image" << std::endl;
             }
             
-            if (save_rgb) {
+            if (this->save_rgb) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_rgb.png");
                 fullPath = directory / file;
-                cv::imwrite(fullPath.string(), rgbLight);
+                cv::imwrite(fullPath.string(), rgb_light_images.at(i));
             }
             
         }
