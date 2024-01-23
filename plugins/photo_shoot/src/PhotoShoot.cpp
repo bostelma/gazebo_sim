@@ -151,17 +151,12 @@ void PhotoShoot::PerformPostRenderingOperations()
             }
         }
 
-        std::cout << "Save Thermal: " << this->save_thermal << std::endl;
-        std::cout << "Save RGB: " << this->save_rgb << std::endl;
-        std::cout << "Save Depth: " << this->save_depth << std::endl;
-
         // Take the thermal images
         std::vector<cv::Mat> thermal_images;
         if (this->save_thermal) {
             for (std::size_t i = 0; i < this->poses.size(); i++) {
                 thermal_images.push_back(this->TakePictureThermal(thermal_camera, this->poses[i]));
             }
-            std::cout << "Took thermal images" << std::endl;
         }
 
         // Take normal rgb images
@@ -172,7 +167,6 @@ void PhotoShoot::PerformPostRenderingOperations()
                 cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
                 rgb_light_images.push_back(mat);
             }
-            std::cout << "Took rgb images" << std::endl;
         }
 
         // Take depth images
@@ -181,7 +175,6 @@ void PhotoShoot::PerformPostRenderingOperations()
             for (std::size_t i = 0; i < this->poses.size(); i++) {
                 depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));
             }
-            std::cout << "Took depth images" << std::endl;
         }
 
 
@@ -201,7 +194,6 @@ void PhotoShoot::PerformPostRenderingOperations()
                 cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
                 rgb_dark_images.push_back(mat);
             }
-            std::cout << "Took dark rgb images" << std::endl;
         }
 
         // Compute outputs
@@ -221,11 +213,6 @@ void PhotoShoot::PerformPostRenderingOperations()
             // Process Thermal image
             cv::Mat thermalOut;
             if (this->save_thermal) {
-
-                std::cout << "Number of rgb_light_images: " << rgb_light_images.size() << std::endl;
-                std::cout << "Number of rgb_dark_images: " << rgb_dark_images.size() << std::endl;
-                std::cout << "Number of thermal_images: " << thermal_images.size() << std::endl;
-
                 cv::Mat &rgbLight = rgb_light_images.at(i);
                 cv::Mat &rgbDark = rgb_dark_images.at(i);
                 cv::Mat thermal;
@@ -310,15 +297,10 @@ void PhotoShoot::PerformPostRenderingOperations()
                 cv::imwrite(fullPath.string(), thermalOut);
             }
             
-            std::cout << "Ich bin noch hier" << std::endl;
             if (this->save_depth) {
-                std::cout << "Pre: Saved depth image" << std::endl;
-
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_depth.png");
                 fullPath = directory / file;
                 cv::imwrite(fullPath.string(), depthOut);
-
-                std::cout << "Saved depth image" << std::endl;
             }
             
             if (this->save_rgb) {
