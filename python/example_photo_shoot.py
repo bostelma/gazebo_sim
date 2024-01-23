@@ -23,6 +23,7 @@ if __name__ == "__main__":
     # https://github.com/gazebosim/sdformat/blob/sdf13/python/src/sdf/pyLight.cc
     # shows the available functions.
     light = world_config.get_light("sun")
+    light.set_visualize(False)
     light.set_direction(gzm.Vector3d(0.5, 0.5, -0.9))
     
     # Configure the scene, which holds for example the ambient light

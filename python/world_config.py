@@ -1,3 +1,4 @@
+import re
 import sys
 
 import sdformat13 as sdf
@@ -38,8 +39,43 @@ class WorldConfig:
 
     def save(self, path: str) -> None:
 
+        # Convert the sdf object to a string
+        str = self.root.to_string()
+
+        # Bug fix: The <visualize> tag for light sources is not saved
+        #          correctly, so we have to add it manually.
+
+        light_source_names = []
+        for light_index in range(self.world.light_count()):
+            light = self.world.light_by_index(light_index)
+            # Save the name of the light source if it is not visualized
+            if not light.visualize():
+                light_source_names.append(light.name())
+                
+        # Add the <visualize> tag for all light sources that are not visualized
+        out_str = ""
+        lines = str.splitlines()
+        for i, line in enumerate(lines):
+            changed = False
+            for light_source_name in light_source_names:
+                if f'<light name=\'{light_source_name}\'' in line:
+                    # Orig line
+                    out_str += line + "\n"
+                    # Spaces
+                    spaces = re.match(r"\s*", lines[i+1])
+                    if spaces is not None:
+                        out_str += spaces.group()
+                    # Visualize tag
+                    out_str += '<visualize>false</visualize>\n'
+                    changed = True
+            if not changed:
+                out_str += line + "\n"
+        str = out_str
+
+        # Finally write the result
         with open(path, "w") as file:
-            file.write(self.root.to_string())
+            file.write(str)
+        
 
     def add_atmosphere(self, atmosphere):
 
