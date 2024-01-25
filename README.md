@@ -9,7 +9,7 @@
 
 2. [Install Apptainer](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) using the official instructions.
 
-3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.7.9 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command.
+3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.7.9 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command. When using Windows and WSL, use the corresponding windows versions.
     ```
     cd ~/gazebo_sim/apptainer
     apptainer build --build-arg GZ_PATH=~/gazebo_sim gazebo_sim-full.sif ubuntu-gazebo_sim-full.def
@@ -284,6 +284,13 @@ Do a photo shoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.s
     ![Image of rendered light source](resources/rendered_light_source.png)
 
     This behavior can be disabled by adding the tag `<visualize>false</visualize>` within the light tag in the respective world file, or by calling `light.set_visualize(False)` in the respective Python file.
+
+- Memory issues when installing Gazebo on Windows and WSL using Apptainer:
+    - Increase the allowed ram by adding a file `.wslconfig` in the home directory of your windows user with the following content:
+        ```
+        [wsl2]
+        memory=14GB
+        ```
 
 ## BUGS
 - one tree with two species, 0.5 each produces error
