@@ -12,7 +12,7 @@ class PhotoShootConfig(PluginConfig):
         self.config = {
             "directory": None,
             "direct_thermal_factor":  100,
-            "indrect_thermal_factor": 25,
+            "indirect_thermal_factor": 25,
             "lower_thermal_threshold": 200,
             "upper_thermal_threshold":400
         }
