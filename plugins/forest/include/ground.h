@@ -10,7 +10,7 @@ class Ground
 
     public:
 
-        void Generate(int size);
+        void Generate(int size, float textureSize);
 
     public:
 

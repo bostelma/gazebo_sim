@@ -66,10 +66,25 @@ if __name__ == "__main__":
     forest_config.set_generate(True)
     forest_config.set_ground_texture(0)         # Have a look at the respective model for options
     forest_config.set_direct_spawning(True)     # Does not work when using the gazebo gui, but 3x faster
-    forest_config.set_ground_temperature(288.15)# In Kelvin
+
+    # Set the ground temperature, either by setting a constant temperature or
+    # by setting a texture that represents the temperature. The texture needs
+    # a minimal and maximal temperature, which are used to map the texture to
+    # the temperature range.
+    forest_config.set_ground_temperature(
+        288.15        # Temperature in Kelvin
+    )
+    # forest_config.set_ground_thermal_texture(
+    #     0,              # Texture index (From the model)
+    #     288.15,         # Minimal temperature in Kelvin
+    #     320.0           # Maximal temperature in Kelvin
+    # )
+
     forest_config.set_trunk_temperature(291.15) # In Kelvin
     forest_config.set_twigs_temperature(287.15) # In Kelvin
-    forest_config.set_size(100)                 # Width and height of the forest
+
+    forest_config.set_size(100)                 # Width / height of the forest
+    forest_config.set_texture_size(10)          # Width / height of the ground texture
     forest_config.set_trees(200)                # Number of trees
     forest_config.set_seed(100)                 # Change the seed for multiple runs!
     forest_config.set_species("Birch", {

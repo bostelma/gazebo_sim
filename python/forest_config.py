@@ -17,6 +17,7 @@ class ForestConfig(PluginConfig):
             "ground_texture": 0,
             "direct_spawning": True,
             "size": 100,
+            "texture_size": 100,
             "trees": 300
         }
 
@@ -48,6 +49,10 @@ class ForestConfig(PluginConfig):
         self.config["size"] = size
         self._write_content()
 
+    def set_texture_size(self, texture_size):
+        self.config["texture_size"] = texture_size
+        self._write_content()
+
     def set_trees(self, trees):
         self.config["trees"] = trees
         self._write_content()
@@ -58,6 +63,12 @@ class ForestConfig(PluginConfig):
 
     def set_ground_temperature(self, temperature):
         self.config["ground_temperature"]  = temperature
+        self._write_content()
+
+    def set_ground_thermal_texture(self, texture_index, min_temp, max_temp):
+        self.config["ground_thermal_texture"] = texture_index
+        self.config["min_ground_texture_temp"] = min_temp
+        self.config["max_ground_texture_temp"] = max_temp
         self._write_content()
 
     def set_trunk_temperature(self, temperature):

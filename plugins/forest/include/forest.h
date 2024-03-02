@@ -68,9 +68,9 @@ class Forest
         bool generateForest{true};
         bool directSpawning{false};
 
-        float groundTemperature{288.15};
         float trunkTemperature{288.15};
         float twigsTemperature{288.15};
+        float textureSize{1.0};
 
         int seed;
         int forestSize;
@@ -84,6 +84,7 @@ class Forest
         std::string modelString;
         std::string worldName;
         std::string groundTextureStr;
+        std::string groundThermalStr;
         std::string groundMeshStr;
         std::string treesMeshPrefixStr;
         std::string treesMeshPostfixStr;

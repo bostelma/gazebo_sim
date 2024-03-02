@@ -89,6 +89,14 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
         return false;
     }
 
+    // Extract the texture size
+    if (_sdf->HasElement("texture_size")) {
+        this->textureSize = _sdf->Get<float>("texture_size");
+    } else {
+        std::cerr << "[Forest] The texture size is missing, use <texture_size> tag to specify!" << std::endl;
+        return false;
+    }
+
     // Check if the forest should be generated or loaded
     this->generateForest = true;
     if (_sdf->HasElement("generate")) {
@@ -108,10 +116,45 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
         }
     }
 
-    // Check if temperatur values are given
+    // Check if temperature values are given
+    bool temperatureGiven = false;
     if (_sdf->HasElement("ground_temperature")) {
-        this->groundTemperature = _sdf->Get<float>("ground_temperature");
+        float groundTemperature = _sdf->Get<float>("ground_temperature");
+        temperatureGiven = true;
+        this->groundThermalStr = "<temperature>" + std::to_string(groundTemperature) + "</temperature>";
     }
+    bool thermalTextureGiven = false;
+    if (_sdf->HasElement("ground_thermal_texture")) {
+        int groundThermalTextureIndex = _sdf->Get<int>("ground_thermal_texture");
+        float minGroundTextureTemp;
+        float maxGroundTextureTemp;
+        thermalTextureGiven = true;
+        if (_sdf->HasElement("min_ground_texture_temp")) {
+            minGroundTextureTemp = _sdf->Get<float>("min_ground_texture_temp");
+        } else {
+            std::cerr << "[Forest] Minimum ground texture temperature is missing, use <min_ground_texture_temp> to specify!" << std::endl;
+            return false;
+        }
+        if (_sdf->HasElement("max_ground_texture_temp")) {
+            maxGroundTextureTemp = _sdf->Get<float>("max_ground_texture_temp");
+        } else {
+            std::cerr << "[Forest] Maximum ground texture temperature is missing, use <max_ground_texture_temp> to specify!" << std::endl;
+            return false;
+        }
+        std::string groundThermalTextureStr = FormatNumber(groundThermalTextureIndex, 3);
+        this->groundThermalStr = "<heat_signature>model://procedural-forest/materials/textures/ground_" + groundThermalTextureStr + "_thermal.png</heat_signature>" + "\n" +
+                                 "<min_temp>" + std::to_string(minGroundTextureTemp) + "</min_temp>" + "\n" +
+                                 "<max_temp>" + std::to_string(maxGroundTextureTemp) + "</max_temp>";
+    }
+    
+    if (temperatureGiven && thermalTextureGiven) {
+        std::cerr << "[Forest] Both ground temperature and ground thermal texture are given, use only one!" << std::endl;
+        return false;
+    } else if (!temperatureGiven && !thermalTextureGiven) {
+        std::cerr << "[Forest] No ground temperature or ground thermal texture is given, use one!" << std::endl;
+        return false;
+    }
+
     if (_sdf->HasElement("trunk_temperature")) {
         this->trunkTemperature = _sdf->Get<float>("trunk_temperature");
     }
@@ -171,7 +214,7 @@ bool Forest::ParseGeneralSDF(sdf::ElementPtr _sdf)
 bool Forest::GenerateGround(sdf::ElementPtr _sdf) {
 
     Ground ground;
-    ground.Generate(this->forestSize);
+    ground.Generate(this->forestSize, this->textureSize);
 
     // The Mesh Manager takes care of deleting the mesh
     gz::common::Mesh *groundMesh = new gz::common::Mesh();
@@ -464,7 +507,7 @@ std::string Forest::CreateModelStr()
         "               <plugin" + "\n" +
         "                   filename='ignition-gazebo-thermal-system'" + "\n" +
         "                   name='ignition::gazebo::systems::Thermal'>" + "\n" +
-        "                   <temperature>" + std::to_string(this->groundTemperature) + "</temperature>" + "\n" +
+        "                   " + this->groundThermalStr + "\n" +
         "               </plugin>" + "\n" +
         "           </visual>" + "\n" +
         "           " + trunkVisualString +
