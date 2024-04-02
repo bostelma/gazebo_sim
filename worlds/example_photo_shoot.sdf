@@ -122,7 +122,9 @@
             <generate>true</generate>
             <direct_spawning>true</direct_spawning>
             <size>100</size>
-            <trees>0</trees>
+            <trees>100</trees>
+            <ground_temperature>288.15</ground_temperature>
+            <texture_size>1</texture_size>
             <species name="Birch">
                 <percentage>1.0</percentage>
                 <homogeneity>0.95</homogeneity>

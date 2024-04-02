@@ -40,6 +40,8 @@
             <generate>true</generate>
             <size>100</size>
             <trees>300</trees>
+            <ground_temperature>288.15</ground_temperature>
+            <texture_size>1</texture_size>
             <species name="Birch">
                 <percentage>0.5</percentage>
                 <homogeneity>0.95</homogeneity>
