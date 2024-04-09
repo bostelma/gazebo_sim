@@ -181,7 +181,7 @@ This component adds python binding to msgs and transport and is required to use 
 
 10. Build gz-python using `make`
 
-11. Build the plugins as in step 8 of the ubuntu install instructions, but this time build the swarm plugin as well. Note, that you need to call `build_plugins_full.sh` this time to compile the swarm plugin as well.
+11. Build the plugins as in step 9 of the ubuntu install instructions, but this time build the swarm plugin as well by calling `build_plugins_full.sh`.
 
 12. Setup all paths to make everything available in the current prompt. If you don't use conda, replace the conda develop command with a respective export command like in step 10 of the ubuntu install instructions.
     ```
