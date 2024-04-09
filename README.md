@@ -145,7 +145,7 @@ This component adds python binding to msgs and transport and is required to use 
     conda activate gz-ws
     conda install protobuf=3.20.3
     conda install conda-build libstdcxx-ng
-    pip install opencv==4.5.5.64
+    pip install opencv-python==4.5.5.64
     ```
 
 3. Follow steps 2 through 5 of the ubuntu install instructions and install the correct libogre version if you are using windows.
