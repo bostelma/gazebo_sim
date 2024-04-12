@@ -11,14 +11,29 @@ void Person::Configure(const gz::sim::Entity &_entity,
     // Extract the world name
     gz::sim::Entity worldEntity = _ecm.EntityByComponents(gz::sim::components::World());
     std::optional<std::string> worldNameOptional = _ecm.ComponentData<gz::sim::components::Name>(worldEntity);
+    
+    if (!worldNameOptional) {
+        std::cerr << "[Person] Failed to retrieve world name!" << std::endl;
+        return;
+    }
+    
+    
     this->worldName = worldNameOptional.value();
 
     if (!this->ParseGeneralSDF(parentSDF)) {
         return;
     }
 
+    
+    // Advertise the spawn service
+    std::string service = "/world/" + this->worldName + "/person/spawn";
+    if (!this->spawnNode.Advertise(service, &Person::ServiceSpawn, this)) {
+        std::cerr << "[Person] Error advertising service [" << service << "]" << std::endl;
+        return;
+    }
+
     // Advertise the waypoint service
-    std::string service = "/world/" + this->worldName + "/person/waypoint";
+    service = "/world/" + this->worldName + "/person/waypoint";
     if (!this->waypointNode.Advertise(service, &Person::ServiceWaypoint, this)) {
         std::cerr << "[Person] Error advertising service [" << service << "]" << std::endl;
         return;
@@ -91,22 +106,106 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
 void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
                       gz::sim::EntityComponentManager &_ecm)
 {
-    if (!this->waypoints.empty()) {
-        gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name("Person"));
-        gz::sim::Model model = gz::sim::Model(entity);
-        model.SetWorldPoseCmd(_ecm, this->waypoints.front());
-        this->waypoints.pop();
-    }
+
+    /*
+    Here I have to iterate through the persons
+    */
+   for (auto it = this->persons.begin(); it != this->persons.end(); it++)
+   {
+        PersonStruct &person = it->second;
+        if (!person.waypoints.empty()) {
+            gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name("Person"));
+            gz::sim::Model model = gz::sim::Model(entity);
+            model.SetWorldPoseCmd(_ecm, person.waypoints.front());
+            //Individual Waypoint queue for each person?
+            //TODO: Implement
+            person.waypoints.pop();
+        }   
+   }
+
     
 }
 
-bool Person::ServiceWaypoint(const gz::msgs::Pose &_req, gz::msgs::Boolean &_rep)
-{
-    gz::math::Pose3d waypoint = gz::msgs::Convert(_req);
-    this->waypoints.push(waypoint);
+//TODO: Implement bool Person::ServiceSpawn(...) like in swarm.cpp
 
+bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
+{
+    // Setup spawn service
+    gz::transport::Node node;
+    gz::msgs::EntityFactory req;
+    gz::msgs::Boolean res;
+    bool result;
+
+    std::string topic = "/world/" + worldName + "/create";
+    int timeout = 1000; // ms
+
+    // Iterate over all persons
+    for (const gz::msgs::Pose &poseMsg : _req.pose()) {
+        // Extract details from message
+        std::string personModel = poseMsg.name();
+        int personId = (int) poseMsg.id();
+        std::string personName = personModel + "_" + std::to_string(personId);
+
+        // Try to spawn respective person
+        req.set_sdf_filename("model://" + personModel);
+        req.set_name(personName);
+        req.mutable_pose()->CopyFrom(poseMsg);
+        bool executed = node.Request(topic, req, timeout, res, result);
+        if (executed) {
+            if (!result) {
+                std::cerr << "[Person] Request to spawn person failed!" << std::endl;
+                return false;
+            } else {
+                PersonStruct person;
+                person.id = personId;
+                person.name = personName;
+
+                this->persons.insert(std::pair<int, PersonStruct>(personId, person));
+            }
+        } else {
+            std::cerr << "[Person] Request to spawn person timed out, T = " << timeout << std::endl;
+            return false;
+        }
+    }
     return true;
 }
+
+bool Person::ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
+{
+    //TODO: Implement Waypoint Service for multiple Persons
+    /*
+    Setup Waypoint service and then iterate over waypoints and find specific person
+    */
+
+    gz::transport::Node node;
+    gz::msgs::Pose req;
+    gz::msgs::Boolean res;
+    bool result;
+
+    int timeout = 1000; //ms
+
+    for (const gz::msgs::Pose &poseMsg : _req.pose()) {
+        //Extract details from person
+        int personId = (int) poseMsg.id();
+
+        //Find the person and add the waypoint
+        auto entry = this->persons.find(personId);
+        if (entry != this->persons.end()) {
+            entry->second.waypoints.push(gz::msgs::Convert(poseMsg));
+        } else{
+            std::cerr << "[Person] No person with ID " << personId << "found!" << std::endl;
+            return false;
+        }    
+    }
+    /*
+    Old:
+    gz::math::Pose3d waypoint = gz::msgs::Convert(_req);
+    this->waypoints.push(waypoint);
+    */
+    return true;
+}
+
+//PerformPostRenderingOperations?
 
 std::string Person::CreateModelStr()
 {

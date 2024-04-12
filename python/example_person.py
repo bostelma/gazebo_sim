@@ -12,7 +12,7 @@ if __name__ == "__main__":
     # sure that the world is currently running:
     # gz sim ~/gazebo_sim/worlds/example_swarm.sdf -r
     person = Person("example_swarm")
-
+    
     # Create a set of waypoints to visit
     waypoint_index = 0
     waypoints = np.array([
@@ -21,6 +21,7 @@ if __name__ == "__main__":
         [ 3.0,  3.0, 0.0],
         [-3.0,  3.0, 0.0]
     ])
+    ids = person.spawn(4)
 
     # Set the time per waypoint in seconds
     delay = 1.0    
@@ -33,10 +34,10 @@ if __name__ == "__main__":
             # Apply a random rotation around the z axis
             angle = random.random() * 2 * np.pi
             orientation = np.array([0.0, 0.0, np.sin(angle/2), np.cos(angle/2)])    #  Random angle around the z axis
-
             # Actually send the waypoint
-            person.waypoint(waypoints[waypoint_index], orientation=orientation)
-
+            #person.waypoints(waypoints[waypoint_index], orientation=orientation)
+            person.waypoints(ids, waypoints, orientation=orientation)
+            
             # Iterate over all waypoints infinitely
             waypoint_index = (waypoint_index + 1) % len(waypoints)
             time.sleep(delay)

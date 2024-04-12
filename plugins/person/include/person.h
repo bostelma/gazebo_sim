@@ -26,6 +26,16 @@ class Person
         public gz::sim::ISystemPreUpdate
 {
 
+    //Added struct so that each person has an own id, name and waypoint queue
+    private:
+        
+        struct PersonStruct{
+            int id;
+            std::string name;
+            std::queue<gz::math::Pose3d> waypoints;
+        };
+
+
     public:
 
         virtual void Configure(const gz::sim::Entity &_entity,
@@ -36,7 +46,8 @@ class Person
         virtual void PreUpdate(const gz::sim::UpdateInfo &_info,
                                gz::sim::EntityComponentManager &_ecm) override;
 
-        bool ServiceWaypoint(const gz::msgs::Pose &_req, gz::msgs::Boolean &_rep);
+        bool ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep);
+        bool ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep);
 
     private:
 
@@ -57,9 +68,11 @@ class Person
         std::string modelPath;
         std::string worldName;
 
+        std::map<int, PersonStruct> persons;
+
+        gz::transport::Node spawnNode;
         gz::transport::Node waypointNode;
 
-        std::queue<gz::math::Pose3d> waypoints;
 
 };
 
