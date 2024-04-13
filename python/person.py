@@ -130,8 +130,8 @@ class Person:
         for id, pos in zip(ids, positions, ):
             
             pos_msg = Vector3d()
-            pos_msg.x = -positions[1]     # Add this transformation to fit the LFR coordinate system
-            pos_msg.y = -positions[0]     # Add this transformation to fit the LFR coordinate system
+            pos_msg.x = -pos[1]     # Add this transformation to fit the LFR coordinate system
+            pos_msg.y = -pos[0]     # Add this transformation to fit the LFR coordinate system
             pos_msg.z = 0.0
 
             quat_msg = Quaternion()
