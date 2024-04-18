@@ -16,10 +16,10 @@ if __name__ == "__main__":
     # Create a set of waypoints to visit
     waypoint_index = 0
     waypoints = np.array([
-        [-3.0, -3.0, 0.0],
         [ 3.0, -3.0, 0.0],
         [ 3.0,  3.0, 0.0],
-        [-3.0,  3.0, 0.0]
+        [-3.0,  3.0, 0.0],
+        [5.0, -5.0, 0.0]
     ])
     ids = person.spawn(4)
 
@@ -31,15 +31,15 @@ if __name__ == "__main__":
 
         while True:
 
+            waypoints = np.roll(waypoints, 1, axis=0)
+
             # Apply a random rotation around the z axis
             angle = random.random() * 2 * np.pi
-            orientation = np.array([0.0, 0.0, np.sin(angle/2), np.cos(angle/2)])    #  Random angle around the z axis
             # Actually send the waypoint
-            #person.waypoints(waypoints[waypoint_index], orientation=orientation)
-            person.waypoints(ids, waypoints, orientation=orientation)
+            #person.waypoints(waypoints[waypoint_index]
+            person.waypoints(ids, waypoints)
             
-            # Iterate over all waypoints infinitely
-            waypoint_index = (waypoint_index + 1) % len(waypoints)
+            
             time.sleep(delay)
 
     except KeyboardInterrupt:

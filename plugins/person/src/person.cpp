@@ -107,9 +107,6 @@ void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
                       gz::sim::EntityComponentManager &_ecm)
 {
 
-    /*
-    Here I have to iterate through the persons
-    */
    for (auto it = this->persons.begin(); it != this->persons.end(); it++)
    {
         PersonStruct &person = it->second;
@@ -117,16 +114,12 @@ void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
             gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name("Person"));
             gz::sim::Model model = gz::sim::Model(entity);
             model.SetWorldPoseCmd(_ecm, person.waypoints.front());
-            //Individual Waypoint queue for each person?
-            //TODO: Implement
             person.waypoints.pop();
         }   
    }
 
     
 }
-
-//TODO: Implement bool Person::ServiceSpawn(...) like in swarm.cpp
 
 bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 {
@@ -172,11 +165,6 @@ bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 
 bool Person::ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 {
-    //TODO: Implement Waypoint Service for multiple Persons
-    /*
-    Setup Waypoint service and then iterate over waypoints and find specific person
-    */
-
     gz::transport::Node node;
     gz::msgs::Pose req;
     gz::msgs::Boolean res;
@@ -197,15 +185,8 @@ bool Person::ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_r
             return false;
         }    
     }
-    /*
-    Old:
-    gz::math::Pose3d waypoint = gz::msgs::Convert(_req);
-    this->waypoints.push(waypoint);
-    */
     return true;
 }
-
-//PerformPostRenderingOperations?
 
 std::string Person::CreateModelStr()
 {
