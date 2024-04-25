@@ -19,9 +19,9 @@ if __name__ == "__main__":
         [ 3.0, -3.0, 0.0],
         [ 3.0,  3.0, 0.0],
         [-3.0,  3.0, 0.0],
-        [5.0, -5.0, 0.0]
+        [-3.0, -3.0, 0.0]
     ])
-    ids = person.spawn(4)
+    ids = person.spawn(4, positions=waypoints)
 
     # Set the time per waypoint in seconds
     delay = 1.0    

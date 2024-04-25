@@ -33,6 +33,8 @@ if __name__ == "__main__":
         time_passed = 0.0           # Time counter to keep track of the time in seconds
         timeout = 1.0               # Timeout in case something goes wrong
 
+        timeout_occured = False
+        
         while time_passed < timeout:
 
             # All frames for a waypoint called send
@@ -53,3 +55,9 @@ if __name__ == "__main__":
             
             time.sleep(time_delta)
             time_passed += time_delta
+        if time_passed >= timeout:
+                timeout_occured = True
+                print(f"Timeout reached for waypoints with dz={d_z}")
+        
+    if timeout_occured:
+        raise TimeoutError("Timeout occured while waiting for waypoint")
