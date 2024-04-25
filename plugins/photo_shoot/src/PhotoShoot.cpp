@@ -294,21 +294,18 @@ void PhotoShoot::PerformPostRenderingOperations()
             if (this->save_thermal) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
                 fullPath = directory / file;
-                //error_aware_imwrite(fullPath, thermalOut);
                 save_image(fullPath, thermalOut);
             }
             
             if (this->save_depth) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_depth.png");
                 fullPath = directory / file;
-                //error_aware_imwrite(fullPath, depthOut);
                 save_image(fullPath, depthOut);
             }
             
             if (this->save_rgb) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_rgb.png");
                 fullPath = directory / file;
-                //error_aware_imwrite(fullPath, rgb_light_images.at(i));
                 save_image(fullPath, rgb_light_images.at(i));
             }
             
@@ -411,13 +408,11 @@ void error_aware_imwrite(const std::filesystem::path& output_file_path, const cv
     if (const auto parent_path = output_file_path.parent_path();
         !is_directory(parent_path))
     {
-        //std::cerr << "[PhotoShoot] Parent directory did not exist, create data directory with mkdir - p ~/data/photo_shoot" << std::endl;
         throw std::runtime_error("[PhotoShoot] Parent directory did not exist, create data directory with mkdir - p ~/data/photo_shoot");
     }
 
     if (is_regular_file(output_file_path) && !is_file_path_writable(output_file_path))
     {
-        //std::cerr << "[PhotoShoot] File path:" + output_file_path.string() + "is not writable" << std::endl;
         throw std::runtime_error("[PhotoShoot] File path:" + output_file_path.string() + "is not writable");
     }
 
@@ -430,7 +425,6 @@ void error_aware_imwrite(const std::filesystem::path& output_file_path, const cv
     if (const auto successfully_encoded = imencode(file_extension, mat, buffer);
         !successfully_encoded)
     {
-        //std::cerr << "[PhotoShoot] Image Encoding failed" << std::endl;
         throw std::runtime_error("[PhotoShoot] Image Encoding failed");
     }
 
@@ -438,7 +432,6 @@ void error_aware_imwrite(const std::filesystem::path& output_file_path, const cv
     const auto written_file_contents = std::string(buffer.begin(), buffer.end());
     if (written_file_contents.empty())
     {
-        //std::cerr << "[PhotoShoot] Written image bytes were empty" << std::endl;
         throw std::runtime_error("[PhotoShoot] Written image bytes were empty");
     }
 
