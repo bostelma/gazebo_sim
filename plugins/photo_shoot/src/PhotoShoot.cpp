@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-
-
+void error_aware_imwrite(const std::filesystem::path& output_file_path, const cv::Mat& mat);
+void save_image(const std::filesystem::path& output_file_path, const cv::Mat& mat);
 void OnNewThermalFrame(uint16_t *_scanDest, const uint16_t *_scan,
                   unsigned int _width, unsigned int _height,
                   unsigned int _channels,
@@ -294,19 +294,22 @@ void PhotoShoot::PerformPostRenderingOperations()
             if (this->save_thermal) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_thermal.png");
                 fullPath = directory / file;
-                cv::imwrite(fullPath.string(), thermalOut);
+                //error_aware_imwrite(fullPath, thermalOut);
+                save_image(fullPath, thermalOut);
             }
             
             if (this->save_depth) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_depth.png");
                 fullPath = directory / file;
-                cv::imwrite(fullPath.string(), depthOut);
+                //error_aware_imwrite(fullPath, depthOut);
+                save_image(fullPath, depthOut);
             }
             
             if (this->save_rgb) {
                 file = std::filesystem::path(connected_prefix + "pose_" + std::to_string(i) + "_rgb.png");
                 fullPath = directory / file;
-                cv::imwrite(fullPath.string(), rgb_light_images.at(i));
+                //error_aware_imwrite(fullPath, rgb_light_images.at(i));
+                save_image(fullPath, rgb_light_images.at(i));
             }
             
         }
@@ -381,4 +384,74 @@ cv::Mat PhotoShoot::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera
     _camera->Update();
 
     return cv::Mat(height, width, CV_32F, thermalData);
+}
+
+
+bool is_file_path_writable(const std::filesystem::path& file_path)
+{
+    const auto status = std::filesystem::status(file_path);
+    const auto permissions = status.permissions();
+
+    // Check if the file or directory is writable
+    return (permissions & std::filesystem::perms::owner_write) != std::filesystem::perms::none ||
+        (permissions & std::filesystem::perms::group_write) != std::filesystem::perms::none ||
+        (permissions & std::filesystem::perms::others_write) != std::filesystem::perms::none;
+}
+
+void write_string_to_file(const std::filesystem::path& file_path, const std::string& file_contents)
+{
+    std::ofstream file_writer;
+    file_writer.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    file_writer.open(file_path.string(), std::ios::out | std::ios::binary);
+    file_writer << file_contents;
+}
+
+void error_aware_imwrite(const std::filesystem::path& output_file_path, const cv::Mat& mat)
+{
+    if (const auto parent_path = output_file_path.parent_path();
+        !is_directory(parent_path))
+    {
+        //std::cerr << "[PhotoShoot] Parent directory did not exist, create data directory with mkdir - p ~/data/photo_shoot" << std::endl;
+        throw std::runtime_error("[PhotoShoot] Parent directory did not exist, create data directory with mkdir - p ~/data/photo_shoot");
+    }
+
+    if (is_regular_file(output_file_path) && !is_file_path_writable(output_file_path))
+    {
+        //std::cerr << "[PhotoShoot] File path:" + output_file_path.string() + "is not writable" << std::endl;
+        throw std::runtime_error("[PhotoShoot] File path:" + output_file_path.string() + "is not writable");
+    }
+
+    const auto file_extension = output_file_path.extension().string();
+
+    std::vector<uchar> buffer;
+#define MB ((size_t)1024*1024)
+    buffer.resize(10 * MB);
+
+    if (const auto successfully_encoded = imencode(file_extension, mat, buffer);
+        !successfully_encoded)
+    {
+        //std::cerr << "[PhotoShoot] Image Encoding failed" << std::endl;
+        throw std::runtime_error("[PhotoShoot] Image Encoding failed");
+    }
+
+    // Write to the file
+    const auto written_file_contents = std::string(buffer.begin(), buffer.end());
+    if (written_file_contents.empty())
+    {
+        //std::cerr << "[PhotoShoot] Written image bytes were empty" << std::endl;
+        throw std::runtime_error("[PhotoShoot] Written image bytes were empty");
+    }
+
+    write_string_to_file(output_file_path, written_file_contents);
+}
+
+void save_image(const std::filesystem::path& path, const cv::Mat& image) {
+    try {
+        error_aware_imwrite(path, image);
+        std::cout << "[PhotoShoot] Image successfully written to " << path << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << "[PhotoShoot] Error: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[PhotoShoot] An unknown error occurred while writing image." << std::endl;
+    }
 }
