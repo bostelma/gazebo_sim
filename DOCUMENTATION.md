@@ -14,7 +14,7 @@ The system is composed of several main components:
 
 ## Apptainer
 
-The general idea is that you work on the project files on the host system while using the environment that contains gazebo via apptainer.
+The general idea is that you work on the project files on the host system while using the environment that contains gazebo via [apptainer](https://apptainer.org/docs/user/latest/).
 
 1. Start an named instance of your created image.
     ```
