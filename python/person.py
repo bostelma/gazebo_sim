@@ -106,7 +106,7 @@ class Person:
         
         return np.array(ids)
 
-    def waypoints(self, ids,  positions):
+    def waypoints(self, ids,  positions, orientations):
         '''Sends the given waypoint to the person
         
         Parameters
@@ -125,29 +125,18 @@ class Person:
         node = Node()
         request = Pose_V()
 
-        for id, pos in zip(ids, positions):
+        for id, pos, ori in zip(ids, positions, orientations):
             
             pos_msg = Vector3d()
             pos_msg.x = -pos[1]     # Add this transformation to fit the LFR coordinate system
             pos_msg.y = -pos[0]     # Add this transformation to fit the LFR coordinate system
             pos_msg.z = 0.0
 
-            if len(positions) > 1:  # Ensure there is more than one waypoint to calculate direction
-                direction = positions[(id - 1) % len(positions)] - pos
-                direction /= np.linalg.norm(direction)  # Normalize direction vector
-            else:
-                direction = np.array([0, 0, 0])  # If only one waypoint, keep direction zero
-                
-            # Calculate orientation quaternion based on direction
-            angle = np.arccos(direction.dot(np.array([1, 0, 0])) / np.linalg.norm(direction))
-            
-            orientation = np.array([0.0, 0.0, np.sin(angle/2), np.cos(angle/2)])    # Orientation towards next waypoint
-
             quat_msg = Quaternion()
-            quat_msg.x = orientation[0]
-            quat_msg.y = orientation[1]
-            quat_msg.z = orientation[2]
-            quat_msg.w = orientation[3]
+            quat_msg.x = ori[0]
+            quat_msg.y = ori[1]
+            quat_msg.z = ori[2]
+            quat_msg.w = ori[3]
 
             pose_msg = Pose()
             pose_msg.id = id

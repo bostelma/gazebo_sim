@@ -33,11 +33,22 @@ if __name__ == "__main__":
 
             waypoints = np.roll(waypoints, 1, axis=0)
 
-            # Apply a random rotation around the z axis
-            angle = random.random() * 2 * np.pi
+            orientations = np.zeros((len(ids), 4))
+
+            for idx in range(len(ids)):
+                if len(waypoints) > 1:
+                    direction = waypoints[(idx - 1) % len(waypoints)] - waypoints[idx]
+                    direction /= np.linalg.norm(direction) 
+
+                    angle = np.arccos(direction.dot([1, 0, 0]))
+
+                    orientations[idx] = np.array([0.0, 0.0, np.sin(angle/2), np.cos(angle/2)])
+                else:
+                    orientations[idx] = np.array([0.0, 0.0, 0.0, 1.0])
+
             # Actually send the waypoint
             #person.waypoints(waypoints[waypoint_index]
-            person.waypoints(ids, waypoints)
+            person.waypoints(ids, waypoints, orientations)
             
             
             time.sleep(delay)
