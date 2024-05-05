@@ -111,7 +111,7 @@ void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
    {
         PersonStruct &person = it->second;
         if (!person.waypoints.empty()) {
-            gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name("Person"));
+            gz::sim::Entity entity = _ecm.EntityByComponents(gz::sim::components::Name(person.name));
             gz::sim::Model model = gz::sim::Model(entity);
             model.SetWorldPoseCmd(_ecm, person.waypoints.front());
             person.waypoints.pop();
