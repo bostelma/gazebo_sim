@@ -39,9 +39,9 @@ void Person::Configure(const gz::sim::Entity &_entity,
         return;
     }
 
-    std::string modelString = this->CreateModelStr();
+    /*std::string modelString = this->CreateModelStr();
 
-    this->SpawnModel(modelString);
+    this->SpawnModel(modelString);*/
 }
 
 bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
@@ -123,43 +123,41 @@ void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
 
 bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 {
-    // Setup spawn service
-    gz::transport::Node node;
+   gz::transport::Node node;
     gz::msgs::EntityFactory req;
     gz::msgs::Boolean res;
     bool result;
 
-    std::string topic = "/world/" + worldName + "/create";
-    int timeout = 1000; // ms
+    std::string topic = "/world/" + this->worldName + "/create"; 
+    int timeout = 1000;  // Timeout in ms
 
-    // Iterate over all persons
-    for (const gz::msgs::Pose &poseMsg : _req.pose()) {
-        // Extract details from message
+    for (const gz::msgs::Pose &poseMsg : _req.pose())
+    {
+        
         std::string personModel = poseMsg.name();
-        int personId = (int) poseMsg.id();
+        int personId = static_cast<int>(poseMsg.id());
         std::string personName = personModel + "_" + std::to_string(personId);
 
-        // Try to spawn respective person
         req.set_sdf_filename("model://" + personModel);
+        std::string modelStr = this->CreateModelStr();
+        
+        req.set_sdf(modelStr);
         req.set_name(personName);
-        req.mutable_pose()->CopyFrom(poseMsg);
-        bool executed = node.Request(topic, req, timeout, res, result);
-        if (executed) {
-            if (!result) {
-                std::cerr << "[Person] Request to spawn person failed!" << std::endl;
-                return false;
-            } else {
-                PersonStruct person;
-                person.id = personId;
-                person.name = personName;
+        req.mutable_pose()->CopyFrom(poseMsg); 
+        
 
-                this->persons.insert(std::pair<int, PersonStruct>(personId, person));
-            }
-        } else {
-            std::cerr << "[Person] Request to spawn person timed out, T = " << timeout << std::endl;
+        bool executed = node.Request(topic, req, timeout, res, result);
+        if (!executed || !result) {
+            std::cerr << "[Person] Request to spawn person failed or timed out!" << std::endl;
             return false;
         }
+
+        PersonStruct person;
+        person.id = personId;
+        person.name = personName;
+        this->persons.insert({personId, person});
     }
+
     return true;
 }
 

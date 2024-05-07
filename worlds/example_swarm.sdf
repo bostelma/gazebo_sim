@@ -28,7 +28,7 @@
             filename="Person"
             name="Person">
             <model_name>person</model_name>
-            <model_pose>sitting</model_pose>
+            <model_pose>idle</model_pose>
             <pose>-3 3 0 0 0 0</pose>
             <scale>0.02</scale>
         </plugin>

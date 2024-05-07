@@ -46,8 +46,6 @@ if __name__ == "__main__":
                 else:
                     orientations[idx] = np.array([0.0, 0.0, 0.0, 1.0])
 
-            # Actually send the waypoint
-            #person.waypoints(waypoints[waypoint_index]
             person.waypoints(ids, waypoints, orientations)
             
             
