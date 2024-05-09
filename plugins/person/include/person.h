@@ -53,9 +53,9 @@ class Person
 
         bool ParseGeneralSDF(sdf::ElementPtr _sdf);
 
-        std::string CreateModelStr();
+        std::string CreateModelStr(std::string personName = "Person");
 
-        bool SpawnModel(std::string modelStr);
+        bool SpawnModel(std::string modelStr, gz::math::Pose3d pose);
 
     private:
 
@@ -72,7 +72,7 @@ class Person
 
         gz::transport::Node spawnNode;
         gz::transport::Node waypointNode;
-
+        std::vector<gz::math::Pose3d> poses;
 
 };
 

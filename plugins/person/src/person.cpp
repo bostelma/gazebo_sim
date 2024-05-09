@@ -38,10 +38,20 @@ void Person::Configure(const gz::sim::Entity &_entity,
         std::cerr << "[Person] Error advertising service [" << service << "]" << std::endl;
         return;
     }
-
-    /*std::string modelString = this->CreateModelStr();
-
-    this->SpawnModel(modelString);*/
+    int index = 1; 
+    if (!this->poses.empty()) {
+        for (const auto& pose : this->poses) {
+            std::string personName = "Person" + std::to_string(index++);
+            std::string modelString = this->CreateModelStr(personName);
+            bool success = this->SpawnModel(modelString, pose);
+            if (success) {
+                std::cout << "Spawned " << personName << " successfully at pose " << pose << "\n";
+            } else {
+                std::cerr << "[Person] Failed to spawn " << personName << " at pose: " << pose << std::endl;
+            }
+        }
+    }
+    
 }
 
 bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
@@ -100,6 +110,21 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
     }
     this->meshPath = "model://" + modelName + "/meshes/" + modelPose + ".dae";
 
+
+    if (_sdf->HasElement("poses")) {
+        sdf::ElementPtr poseSDF = _sdf->GetElement("poses")->GetElement("pose");
+        while (poseSDF != nullptr) {
+        
+            gz::math::Pose3d pose;
+            poseSDF->GetValue()->Get(pose);
+            this->poses.push_back(pose);
+
+            poseSDF = poseSDF->GetNextElement("pose");
+    }     
+    }
+
+    
+
     return true;
 }
 
@@ -123,7 +148,7 @@ void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
 
 bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
 {
-   gz::transport::Node node;
+    gz::transport::Node node;
     gz::msgs::EntityFactory req;
     gz::msgs::Boolean res;
     bool result;
@@ -186,11 +211,11 @@ bool Person::ServiceWaypoint(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_r
     return true;
 }
 
-std::string Person::CreateModelStr()
+std::string Person::CreateModelStr(std::string personName)
 {
     std::string modelStr = std::string("<?xml version='1.0'?>") + "\n" +
     "<sdf version='1.6'>" + "\n" +
-    "   <model name='Person'>" + "\n" +
+    "   <model name='" + personName + "'>" + "\n" +
     "       <static>true</static>" + "\n" +
     "       <link name='person_link'>" + "\n" +
     "           <visual name='person'>" + "\n" +
@@ -217,7 +242,7 @@ std::string Person::CreateModelStr()
     return modelStr;
 }
 
-bool Person::SpawnModel(std::string modelStr)
+bool Person::SpawnModel(std::string modelStr, gz::math::Pose3d pose)
 {
     gz::transport::Node node;
     gz::msgs::EntityFactory req;
@@ -225,7 +250,7 @@ bool Person::SpawnModel(std::string modelStr)
     bool result;
 
     req.set_sdf(modelStr);
-    gz::msgs::Set(req.mutable_pose(), this->modelPose);
+    gz::msgs::Set(req.mutable_pose(), pose);  // Stelle sicher, dass die übergebene Pose verwendet wird
     std::string topic = "/world/" + this->worldName + "/create";
 
     int timeout = 1000; // ms
@@ -236,7 +261,7 @@ bool Person::SpawnModel(std::string modelStr)
             return false;
         }
     } else {
-        std::cerr << "[Person] Request to spawn person timed out, T = " << timeout << std::endl;
+        std::cerr << "[Person] Request to spawn person timed out, T = " << timeout << "\n";
         return false;
     }
 

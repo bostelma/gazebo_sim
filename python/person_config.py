@@ -23,8 +23,27 @@ class PersonConfig(PluginConfig):
         self._write_content()
 
     def set_pose(self, pose):
-        self.config["pose"] = pose
+        if "poses" not in self.config:
+            self.config["poses"] = {
+                "pose": [pose]
+            }
+        else:
+            self.config["poses"]["pose"].append(pose)
+            
         self._write_content()
+
+    def add_poses(self, poses):
+
+        if "poses" not in self.config:
+            self.config["poses"] = {
+                "pose": poses
+            }
+        else:
+            self.config["poses"]["pose"].extend(poses)
+
+        self._write_content()
+
+
 
     def set_scale(self, scale):
         self.config["scale"] = scale
