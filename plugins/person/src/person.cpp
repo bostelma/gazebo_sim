@@ -38,11 +38,15 @@ void Person::Configure(const gz::sim::Entity &_entity,
         std::cerr << "[Person] Error advertising service [" << service << "]" << std::endl;
         return;
     }
+
+
+    // Spawn static persons if poses tag is given in the sdf-file
     int index = 1; 
     if (!this->poses.empty()) {
         for (const auto& pose : this->poses) {
             std::string personName = "Person" + std::to_string(index++);
             std::string modelString = this->CreateModelStr(personName);
+            // Attempt to spawn the model at the specified pose
             bool success = this->SpawnModel(modelString, pose);
             if (success) {
                 std::cout << "Spawned " << personName << " successfully at pose " << pose << "\n";
@@ -110,7 +114,7 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
     }
     this->meshPath = "model://" + modelName + "/meshes/" + modelPose + ".dae";
 
-
+    // If there's a "poses" tag in the SDF, extract and store them
     if (_sdf->HasElement("poses")) {
         sdf::ElementPtr poseSDF = _sdf->GetElement("poses")->GetElement("pose");
         while (poseSDF != nullptr) {
@@ -131,7 +135,7 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
 void Person::PreUpdate(const gz::sim::UpdateInfo &_info,
                       gz::sim::EntityComponentManager &_ecm)
 {
-
+    // Iterate over the list of persons and set their waypoints
    for (auto it = this->persons.begin(); it != this->persons.end(); it++)
    {
         PersonStruct &person = it->second;
@@ -153,6 +157,7 @@ bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
     gz::msgs::Boolean res;
     bool result;
 
+    // Define the topic for spawning new entities in Gazebo
     std::string topic = "/world/" + this->worldName + "/create"; 
     int timeout = 1000;  // Timeout in ms
 
@@ -170,13 +175,13 @@ bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
         req.set_name(personName);
         req.mutable_pose()->CopyFrom(poseMsg); 
         
-
+        // Request entity creation in Gazebo
         bool executed = node.Request(topic, req, timeout, res, result);
         if (!executed || !result) {
             std::cerr << "[Person] Request to spawn person failed or timed out!" << std::endl;
             return false;
         }
-
+        // Create a new person structure and store it in the `persons` map
         PersonStruct person;
         person.id = personId;
         person.name = personName;
@@ -250,7 +255,7 @@ bool Person::SpawnModel(std::string modelStr, gz::math::Pose3d pose)
     bool result;
 
     req.set_sdf(modelStr);
-    gz::msgs::Set(req.mutable_pose(), pose);  // Stelle sicher, dass die übergebene Pose verwendet wird
+    gz::msgs::Set(req.mutable_pose(), pose);
     std::string topic = "/world/" + this->worldName + "/create";
 
     int timeout = 1000; // ms
