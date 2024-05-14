@@ -22,7 +22,7 @@ class PersonConfig(PluginConfig):
         self.config["model_pose"] = model_pose
         self._write_content()
 
-    def set_pose(self, pose):
+    def add_pose(self, pose):
         if "poses" not in self.config:
             self.config["poses"] = {
                 "pose": [pose]
