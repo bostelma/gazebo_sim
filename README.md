@@ -2,12 +2,14 @@
 
 ## Apptainer
 
+On any Linux distro that supports Apptainer, but preferably Ubuntu 22.04, it is recommended to use the Apptainer installation option.
+
 1. Clone the simulator without the submodules that contain the gazebo source code.
     ```
     git clone https://github.com/bostelma/gazebo_sim.git
     ```
 
-2. [Install Apptainer](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) using the official instructions.
+2. [Install Apptainer](https://apptainer.org/docs/admin/main/installation.html) using the official instructions.
 
 3. Build the Apptainer image from the definition file. There are two versions, one without python bindings, called `ubuntu-gazebo_sim-basic.def` and one with python bindings, called `ubuntu-gazebo_sim-full.def`. The latter uses a python 3.7.9 conda environment, while the first one uses the default python 3.10 interpreter of ubuntu. As the images are read-only, the path to the mutable files on the host system has to be passed to the build command. When using Windows and WSL, use the corresponding windows versions.
     ```
@@ -23,9 +25,31 @@
     exit
     ```
 
+## Windows
+
+On Windows, the simulation can can be used in the same way as on Linux/Ubuntu by using WSL 2.
+1. Install/Activate [WSL2](https://learn.microsoft.com/de-de/windows/wsl/install) and make sure it is the newest version by updating first via
+   ```
+   wsl --update
+   ```
+
+2. Install a new Ubuntu 22.04 distro using
+   ```
+   wsl --install Ubuntu-22.04
+   ```
+
+3. Start the new installed distro by calling
+   ```
+   wsl -d Ubuntu-22.04
+   ```
+
+4. From here follow either of the insall options, but preferably the apptainer version. On request, a prebuild and exported WSL distro can be provided to you.
+
 ## Source Install 
 
-### Ubuntu 22.04
+The source install option is currently only tested and supppoorted for Ubuntu 22.04.
+
+### Basic Version
 
 1. Update Ubuntu to make all packages available:
     ```
@@ -98,32 +122,7 @@
 	export PYTHONPATH=${PYTHONPATH}:~/gazebo_sim/workspace/install/lib/python
     ```
 
-### Windows
-
-1. Install/Activate [WSL2](https://learn.microsoft.com/de-de/windows/wsl/install) and setup a Ubuntu 22.04 environment.
-
-2. Follow steps 1 to 5 of the ubuntu install instructions above.
-
-3. Install a specific OGRE2 version that contains a WSL specific bug fix:
-    ```
-    sudo apt remove libogre-next-2.3.0 libogre-next-2.3-dev
-	curl -o libogre-next-2.3_2.3.1-9osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/61/artifact/pkgs/libogre-next-2.3.0_2.3.1-9osrf%7Ejammy_amd64.deb
-	curl -o libogre-next-2.3-dev_2.3.1-9osrf~jammy_amd64.deb https://build.osrfoundation.org/job/ogre-2.3-debbuilder/61/artifact/pkgs/libogre-next-2.3-dev_2.3.1-9osrf%7Ejammy_amd64.deb
-	sudo apt install ./libogre-next-2.3_2.3.1-9osrf~jammy_amd64.deb
-	sudo apt install ./libogre-next-2.3-dev_2.3.1-9osrf~jammy_amd64.deb
-	cd /usr/include
-	sudo cp -r OGRE-2.3/ OGRE_TMP/
-	sudo mv OGRE_TMP OGRE-2.3/OGRE
-    ```
-
-4. Finish the same way as in the ubuntu install instructions above.
-
-5. Allows access to the /dev/dri directory in case the error occurs:
-    ```
-    sudo chmod ugo+rwx dev/dri/*
-    ```
-
-### Full installation with python bindings
+### Full Version
 
 This component adds python binding to msgs and transport and is required to use the swarm functionality.
 
@@ -192,80 +191,11 @@ This component adds python binding to msgs and transport and is required to use 
     conda develop ~/gazebo_sim/workspace/src/gz-python/build/python
     ```
 
-## Usage
-
-### Apptainer
-
-The general idea is that you work on the project files on the host system while using the environment that contains gazebo via apptainer.
-
-1. Start an named instance of your created image.
-    ```
-    apptainer instance start ~/gazebo_sim/apptainer/gazebo_sim-full.sif gazebo
-    ```
-
-2. Start a shell within the container.
-    ```
-    apptainer shell instance://gazebo
-    ```
-
-3. Stop an instance once you are finished.
-    ```
-    apptainer instance stop gazebo
-    ```
-
-To be able to work on notebooks while using the container environment, the container feature a jupyter server that is running when starting an instance as described above. To get the address and the required token, execute `jupyter notebook list` from within the container. If you want to use an password instead, you need to add it to the build command: `--build-arg JUPYTER_PASSWORD=my_secure_password`. Make sure to use a secure password as it prevents others from executing code on your machine!
-
-### Photo Shoot
-
-1. Make sure that everything is available by performing step 7 and 10 of the ubuntu install instructions before starting.
-
-2. Create the data directory for the example script:
-    ```
-    mkdir -p ~/data/photo_shoot
-    ```
-
-3. Generate an example image:
-    ```
-    cd ~/gazebo_sim/python
-    python3 example_photo_shoot.py
-    ```
-
-4. The resulting image is now stored at the previously created directory. Have a look at the used python file to generate custom images yourself.
-
-### Swarm
-
-1. Make sure that everything is available by performing step 7 and 10 of the ubuntu install instructions before starting, as well as the additional python path for gz-python.
-
-2. Create the data directory for the example script:
-    ```
-    mkdir -p ~/data/swarm
-    ```
-
-3. Start and run the gazebo simulation first in headless mode:
-    ```
-    gz sim ~/gazebo_sim/worlds/example_swarm.sdf -r -s
-    ```
-
-4. Execute the example python file in another shell, but make sure all paths are set, the workspace is sourced, and the correct python environment is activated!
-    ```
-    cd ~/gazebo_sim/python
-    python3 example_swarm.py 
-    ```
-
-5. The resulting images are now stored at the previously created directory. Have a look at the used python file to understand how it is done. The benefit of this method is, that multiple images of the same world can be generated without restarting the whole simulation. As the tree generation takes up most of the startup time, this is a significant time decrease.
-
 ## Plugins
 
 ### Photo Shoot
 
 Do a photo shoot with: `gz sim -s -r --iterations 2 worlds/example_photo_shoot.sdf`
-
-##  TODOs
-
-- Include gz-python in colcon build
-- Add global build for plugins
-- Build additional messages separately (https://github.com/gazebosim/gz-sim/blob/fbc3ca84b86cc3c0033ae3979797340b7bf1b361/src/msgs/CMakeLists.txt)
-- Redo the swarm plugin and add the new thermal functionality
 
 ## Issues
 
