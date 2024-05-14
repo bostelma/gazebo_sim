@@ -44,14 +44,12 @@ void Person::Configure(const gz::sim::Entity &_entity,
     int index = 1; 
     if (!this->poses.empty()) {
         for (const auto& pose : this->poses) {
-            std::string personName = "Person" + std::to_string(index++);
+            std::string personName = "static_person_" + std::to_string(index++);
             std::string modelString = this->CreateModelStr(personName);
             // Attempt to spawn the model at the specified pose
             bool success = this->SpawnModel(modelString, pose);
-            if (success) {
-                std::cout << "Spawned " << personName << " successfully at pose " << pose << "\n";
-            } else {
-                std::cerr << "[Person] Failed to spawn " << personName << " at pose: " << pose << std::endl;
+            if (!success) {
+                std::cerr << "[Person] Failed to spawn " << personName << " at pose: " << pose << std::endl; 
             }
         }
     }
@@ -166,7 +164,7 @@ bool Person::ServiceSpawn(const gz::msgs::Pose_V &_req, gz::msgs::Boolean &_rep)
         
         std::string personModel = poseMsg.name();
         int personId = static_cast<int>(poseMsg.id());
-        std::string personName = personModel + "_" + std::to_string(personId);
+        std::string personName = "dynamic_" + personModel + "_" + std::to_string(personId);
 
         req.set_sdf_filename("model://" + personModel);
         std::string modelStr = this->CreateModelStr();
