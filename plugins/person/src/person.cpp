@@ -124,7 +124,7 @@ bool Person::ParseGeneralSDF(sdf::ElementPtr _sdf)
             this->poses.push_back(pose);
 
             poseSDF = poseSDF->GetNextElement("pose");
-    }     
+        }     
     }
 
     
