@@ -220,7 +220,8 @@ void Swarm::PerformPostRenderingOperations()
 
     if (!ids.empty()) {
         
-        std::vector<std::pair<cv::Mat, cv::Mat>> images = this->CreateImages(poses);
+        //std::vector<std::pair<cv::Mat, cv::Mat>> images = this->CreateImages(poses);
+        std::vector<std::tuple<cv::Mat, cv::Mat, cv::Mat>> images = this->CreateImages(poses);
         gz::msgs::Frame_V frames;
 
         std::vector<const char*> dynamic_arrays;
@@ -255,6 +256,18 @@ void Swarm::PerformPostRenderingOperations()
             frame->mutable_thermalimage()->set_step(thermalImage.cols);     
             frame->mutable_thermalimage()->set_data(thermal_img_data, thermalImage.cols * thermalImage.rows);
             frame->mutable_thermalimage()->set_pixel_format_type(gz::msgs::PixelFormatType::L_INT8);
+        
+        
+            cv::Mat depthImage = std::get<2>(images.at(i));
+            char* depth_img_data = new char[depthImage.cols * depthImage.rows];
+            std::memcpy(depth_img_data, depthImage.data, depthImage.cols * depthImage.rows);
+            dynamic_arrays.push_back(depth_img_data);
+
+            frame->mutable_depthimage()->set_width(depthImage.cols);
+            frame->mutable_depthimage()->set_height(depthImage.rows);
+            frame->mutable_depthimage()->set_step(depthImage.cols);     
+            frame->mutable_depthimage()->set_data(depth_img_data, depthImage.cols * depthImage.rows);
+            frame->mutable_depthimage()->set_pixel_format_type(gz::msgs::PixelFormatType::L_INT8);
         }
 
         // Publish frame message
@@ -269,7 +282,7 @@ void Swarm::PerformPostRenderingOperations()
     }
 }
 
-std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::math::Pose3d> poses)
+std::vector<std::tuple<cv::Mat, cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::math::Pose3d> poses)
 {
     gz::rendering::ScenePtr scene = gz::rendering::sceneFromFirstRenderEngine();
     gz::rendering::ThermalCameraPtr thermal_camera;
@@ -295,12 +308,11 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
         }
 
         auto tmp_depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
-            if (tmp_depth_camera != nullptr) {
-                if (tmp_depth_camera->Name() == "drone_camera::camera_link::depth_camera") {
-                    depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
-                }
+        if (tmp_depth_camera != nullptr) {
+            if (tmp_depth_camera->Name() == "drone_camera::camera_link::depth_camera") {
+                depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
             }
-
+        }
     }
 
     // Take the thermal images
@@ -319,8 +331,8 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
 
     // Take depth images
     std::vector<cv::Mat> depth_images;
-    for (std::size_t i = 0; i < this->poses.size(); i++) {
-        depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));            }
+    for (std::size_t i = 0; i < poses.size(); i++) {
+        depth_images.push_back(this->TakePictureDepth(depth_camera, poses[i]));
     }
 
     // Disable lights
@@ -354,12 +366,22 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
     //TODO: Compute Depth Output
 
     // Compute thermal output
-    std::vector<std::pair<cv::Mat, cv::Mat>> images;
+    //std::vector<std::pair<cv::Mat, cv::Mat>> images;
+    std::vector<std::tuple<cv::Mat, cv::Mat, cv::Mat>> images;
+    
     for (unsigned int i = 0; i < rgb_light_images.size(); i++) {
         cv::Mat rgbLight = rgb_light_images.at(i).clone();
         cv::Mat rgbDark = rgb_dark_images.at(i).clone();
         cv::Mat thermal_raw = thermal_images.at(i).clone();
         cv::Mat thermal;
+
+        cv::Mat depthOut;
+        cv::Mat &depth = depth_images.at(i);
+
+        depth += this->depth_offset;
+        depth *= this->depth_scale;
+        depth.convertTo(depthOut, CV_16U);
+
         thermal_raw.convertTo(thermal, CV_32F);
         thermal = thermal * thermal_camera->LinearResolution();
 
@@ -407,7 +429,7 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
         thermalOut.convertTo(thermalOut, CV_8U);
         rgbLight.convertTo(rgbLight, CV_8UC3);
 
-        images.push_back(std::make_pair(rgbLight, thermalOut));
+        images.push_back(std::make_tuple(rgbLight, thermalOut, depthOut));
     }
 
     for (cv::Mat mat : thermal_images) {
@@ -419,7 +441,9 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
     for (cv::Mat mat : rgb_dark_images) {
         delete[] mat.ptr();
     }
-    
+    for (cv::Mat mat : depth_images) {
+        delete[] mat.ptr();
+    }
     return images;
 }
 
@@ -459,7 +483,7 @@ cv::Mat Swarm::TakePictureRGB(const gz::rendering::CameraPtr _camera,
     return cv::Mat(height, width, CV_8UC3, rbgData);
 }
 
-cv::Mat PhotoShoot::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
+cv::Mat Swarm::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
                                 const gz::math::Pose3d &_pose)
 {
     unsigned int width = _camera->ImageWidth();

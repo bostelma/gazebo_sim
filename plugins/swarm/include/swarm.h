@@ -11,6 +11,7 @@
 #include <gz/rendering/Scene.hh>
 #include <gz/rendering/RenderingIface.hh>
 #include <gz/rendering/ThermalCamera.hh>
+#include <gz/rendering/DepthCamera.hh>
 #include <gz/rendering/Visual.hh>
 #include <gz/sim/rendering/Events.hh>
 #include <gz/transport.hh>
@@ -64,14 +65,15 @@ class Swarm
 
         void PerformPostRenderingOperations();
 
-        std::vector<std::pair<cv::Mat, cv::Mat>> CreateImages(std::vector<gz::math::Pose3d> poses);
+        std::vector<std::tuple<cv::Mat, cv::Mat, cv::Mat>> CreateImages(std::vector<gz::math::Pose3d> poses);
 
         cv::Mat TakePictureThermal(const gz::rendering::ThermalCameraPtr _camera,
                                 const gz::math::Pose3d &_pose);
 
         cv::Mat TakePictureRGB(const gz::rendering::CameraPtr _camera,
                             const gz::math::Pose3d &_pose);
-
+        cv::Mat TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
+                                const gz::math::Pose3d &_pose);
     private:
 
         std::vector<std::shared_ptr<gz::transport::Node>> frameNodes;
@@ -86,6 +88,9 @@ class Swarm
         std::map<int, Drone> drones;
 
         gz::common::ConnectionPtr connection{nullptr};
+
+        float depth_offset{0.0f};
+        float depth_scale{100.0f};
 
         float direct_thermal_factor;
         float indirect_thermal_factor;

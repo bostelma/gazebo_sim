@@ -54,6 +54,7 @@ class Swarm:
         self.received_frames = {}
         self.rgb_images = {}
         self.thermal_images = {}
+        self.depth_images = {}
 
         self._frame_node = Node()
 
@@ -126,6 +127,7 @@ class Swarm:
             self.received_frames[self._drone_id] = False
             self.rgb_images[self._drone_id] = None
             self.thermal_images[self._drone_id] = None
+            self.depth_images[self._drone_id] = None
             ids.append(self._drone_id)
             self._drone_id += 1
 
@@ -182,6 +184,7 @@ class Swarm:
             self.received_frames[id] = False
             self.rgb_images[id] = None
             self.thermal_images[id] = None
+            self.depth_images[id] = None
 
         rep_msg_type_name = Boolean.DESCRIPTOR.full_name
         suc, ret = node.request(self.waypoint_topic, request, self.timeout, rep_msg_type_name)
@@ -216,5 +219,15 @@ class Swarm:
             img_arr = np.repeat(img_arr[:, :, np.newaxis], 3, axis=2)
 
             self.thermal_images[id] = copy.deepcopy(img_arr)
+            
+            image_width = frame.depthImage.width
+            image_height = frame.depthImage.height
+
+            img_arr = np.frombuffer(frame.depthImage.data, dtype=np.uint8, count=image_width*image_height)
+            
+            img_arr = np.reshape(img_arr, (image_width, image_height))
+            img_arr = np.repeat(img_arr[:, :, np.newaxis], 3, axis=2)
+
+            self.depth_images[id] = copy.deepcopy(img_arr)
 
             self.received_frames[id] = True
