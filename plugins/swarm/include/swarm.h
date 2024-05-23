@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <queue>
+#include <tuple>
 
 #include <gz/plugin/Register.hh>
 #include <gz/rendering/Camera.hh>

@@ -78,6 +78,8 @@
         <plugin
             filename="Swarm"
             name="Swarm">
+            <depth_offset>0.0</depth_offset>
+            <depth_scale>100.0</depth_scale>
             <direct_thermal_factor>64</direct_thermal_factor>
             <indirect_thermal_factor>5.0</indirect_thermal_factor>
             <lower_thermal_threshold>285</lower_thermal_threshold>

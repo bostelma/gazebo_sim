@@ -9,6 +9,15 @@ void OnNewThermalFrame(uint16_t *_scanDest, const uint16_t *_scan,
     int size =  _width * _height * _channels;
     memcpy(_scanDest, _scan, size * sizeof(u));
 }
+void OnNewDepthFrame(float *_scanDest, const float *_scan,
+                  unsigned int _width, unsigned int _height,
+                  unsigned int _channels,
+                  const std::string &_format)
+{
+    float u;
+    int size =  _width * _height;
+    memcpy(_scanDest, _scan, size * sizeof(u));
+}
 
 void Swarm::Configure(const gz::sim::Entity &_entity,
                                const std::shared_ptr<const sdf::Element> &_sdf,
@@ -62,6 +71,15 @@ void Swarm::Configure(const gz::sim::Entity &_entity,
 
 bool Swarm::ParseGeneralSDF(sdf::ElementPtr _sdf)
 {
+
+    if (_sdf->HasElement("depth_offset")) {
+        this->depth_offset = _sdf->Get<float>("depth_offset");
+    }
+
+    if (_sdf->HasElement("depth_scale")) {
+        this->depth_scale = _sdf->Get<float>("depth_scale");
+    }
+
     if (!_sdf->HasElement("direct_thermal_factor")) {
         std::cerr << "[Swarm] Direct thermal factor is missing, specify with <direct_thermal_factor> tag!" << std::endl;
         return false;    
@@ -201,9 +219,8 @@ void Swarm::PerformPostRenderingOperations()
     }
 
     if (!ids.empty()) {
-
+        
         std::vector<std::pair<cv::Mat, cv::Mat>> images = this->CreateImages(poses);
-
         gz::msgs::Frame_V frames;
 
         std::vector<const char*> dynamic_arrays;
@@ -256,6 +273,7 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
 {
     gz::rendering::ScenePtr scene = gz::rendering::sceneFromFirstRenderEngine();
     gz::rendering::ThermalCameraPtr thermal_camera;
+    gz::rendering::DepthCameraPtr depth_camera;
     gz::rendering::CameraPtr rgb_camera;
 
     for (unsigned int i = 0; i < scene->NodeCount(); ++i) {    
@@ -275,6 +293,14 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
                 rgb_camera = std::dynamic_pointer_cast<gz::rendering::Camera>(scene->NodeByIndex(i));
             }
         }
+
+        auto tmp_depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
+            if (tmp_depth_camera != nullptr) {
+                if (tmp_depth_camera->Name() == "drone_camera::camera_link::depth_camera") {
+                    depth_camera = std::dynamic_pointer_cast<gz::rendering::DepthCamera>(scene->NodeByIndex(i));
+                }
+            }
+
     }
 
     // Take the thermal images
@@ -289,6 +315,12 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
         cv::Mat mat = this->TakePictureRGB(rgb_camera, poses[i]);
         cv::cvtColor(mat, mat, 4);  // convert from rgb to bgr
         rgb_light_images.push_back(mat);
+    }
+
+    // Take depth images
+    std::vector<cv::Mat> depth_images;
+    for (std::size_t i = 0; i < this->poses.size(); i++) {
+        depth_images.push_back(this->TakePictureDepth(depth_camera, this->poses[i]));            }
     }
 
     // Disable lights
@@ -318,6 +350,8 @@ std::vector<std::pair<cv::Mat, cv::Mat>> Swarm::CreateImages(std::vector<gz::mat
             light->SetIntensity(intensities.at(i));
         }
     }
+
+    //TODO: Compute Depth Output
 
     // Compute thermal output
     std::vector<std::pair<cv::Mat, cv::Mat>> images;
@@ -423,4 +457,23 @@ cv::Mat Swarm::TakePictureRGB(const gz::rendering::CameraPtr _camera,
     memcpy(rbgData, cameraImage.Data<uint8_t>(), width * height * 3 * sizeof(uint8_t));
 
     return cv::Mat(height, width, CV_8UC3, rbgData);
+}
+
+cv::Mat PhotoShoot::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
+                                const gz::math::Pose3d &_pose)
+{
+    unsigned int width = _camera->ImageWidth();
+    unsigned int height = _camera->ImageHeight();
+
+    _camera->SetWorldPose(_pose);
+
+    float *thermalData = new float[width * height];
+    gz::common::ConnectionPtr connection =
+      _camera->ConnectNewDepthFrame(
+          std::bind(&::OnNewDepthFrame, thermalData,
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+            std::placeholders::_4, std::placeholders::_5));
+    _camera->Update();
+
+    return cv::Mat(height, width, CV_32F, thermalData);
 }
