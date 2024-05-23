@@ -491,13 +491,13 @@ cv::Mat Swarm::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
 
     _camera->SetWorldPose(_pose);
 
-    float *thermalData = new float[width * height];
+    float *depthData = new float[width * height];
     gz::common::ConnectionPtr connection =
       _camera->ConnectNewDepthFrame(
-          std::bind(&::OnNewDepthFrame, thermalData,
+          std::bind(&::OnNewDepthFrame, depthData,
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
             std::placeholders::_4, std::placeholders::_5));
     _camera->Update();
 
-    return cv::Mat(height, width, CV_32F, thermalData);
+    return cv::Mat(height, width, CV_32F, depthData);
 }
