@@ -45,12 +45,12 @@ if __name__ == "__main__":
                 for id in ids:
                     rgb_image = swarm.rgb_images[id]
                     thermal_image = swarm.thermal_images[id]
-
+                    depth_image = swarm.depth_images[id]
                     # In this example we only store them in a data directory
                     # OpenCV expects BGR but it is RGB, so switch the channels
                     cv2.imwrite(f"../../data/swarm/rgb_image_drone_{id}_dz_{d_z}.png", cv2.cvtColor(rgb_image, cv2.COLOR_BGR2RGB))    
                     cv2.imwrite(f"../../data/swarm/thermal_image_drone_{id}_dz_{d_z}.png", thermal_image)
-
+                    cv2.imwrite(f"../../data/swarm/depth_image_drone_{id}_dz_{d_z}.png", depth_image)
                 break
             
             time.sleep(time_delta)
