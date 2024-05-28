@@ -225,6 +225,7 @@ void Swarm::PerformPostRenderingOperations()
         gz::msgs::Frame_V frames;
 
         std::vector<const char*> dynamic_arrays;
+        std::vector<const uint16_t*> dynamic_arrays_depth;
         for (int i = 0; i < ids.size(); i++) {
             int id = ids.at(i);
 
@@ -259,15 +260,20 @@ void Swarm::PerformPostRenderingOperations()
         
         
             cv::Mat depthImage = std::get<2>(images.at(i));
-            char* depth_img_data = new char[depthImage.cols * depthImage.rows];
+            double min, max;
+            cv::minMaxLoc(depthImage, &min, &max);
+            std::cout << "Min: " << min << " Max: " << max << std::endl;
+            std::string str = "../../data/swarm/depthOut" + std::to_string(i) + ".png";
+            cv::imwrite(str, depthImage);
+            uint16_t* depth_img_data = new uint16_t[depthImage.cols * depthImage.rows];
             std::memcpy(depth_img_data, depthImage.data, depthImage.cols * depthImage.rows);
-            dynamic_arrays.push_back(depth_img_data);
+            dynamic_arrays_depth.push_back(depth_img_data);
 
             frame->mutable_depthimage()->set_width(depthImage.cols);
             frame->mutable_depthimage()->set_height(depthImage.rows);
-            frame->mutable_depthimage()->set_step(depthImage.cols);     
-            frame->mutable_depthimage()->set_data(depth_img_data, depthImage.cols * depthImage.rows);
-            frame->mutable_depthimage()->set_pixel_format_type(gz::msgs::PixelFormatType::L_INT8);
+            frame->mutable_depthimage()->set_step(depthImage.cols * 2);     
+            frame->mutable_depthimage()->set_data(depth_img_data, depthImage.cols * depthImage.rows * 2);
+            frame->mutable_depthimage()->set_pixel_format_type(gz::msgs::PixelFormatType::L_INT16);
         }
 
         // Publish frame message
@@ -277,6 +283,10 @@ void Swarm::PerformPostRenderingOperations()
         }
 
         for (const char* dynamic_array : dynamic_arrays) {
+            delete[] dynamic_array;
+        }
+
+        for (const uint16_t* dynamic_array : dynamic_arrays_depth) {
             delete[] dynamic_array;
         }
     }
@@ -380,7 +390,7 @@ std::vector<std::tuple<cv::Mat, cv::Mat, cv::Mat>> Swarm::CreateImages(std::vect
 
         depth += this->depth_offset;
         depth *= this->depth_scale;
-        depth.convertTo(depthOut, CV_16U);
+        depth.convertTo(depthOut, CV_16UC1);
 
         thermal_raw.convertTo(thermal, CV_32F);
         thermal = thermal * thermal_camera->LinearResolution();

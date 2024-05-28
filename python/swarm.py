@@ -223,7 +223,7 @@ class Swarm:
             image_width = frame.depthImage.width
             image_height = frame.depthImage.height
 
-            img_arr = np.frombuffer(frame.depthImage.data, dtype=np.uint8, count=image_width*image_height)
+            img_arr = np.frombuffer(frame.depthImage.data, dtype=np.uint16, count=image_width*image_height)
             
             img_arr = np.reshape(img_arr, (image_width, image_height))
             img_arr = np.repeat(img_arr[:, :, np.newaxis], 3, axis=2)
