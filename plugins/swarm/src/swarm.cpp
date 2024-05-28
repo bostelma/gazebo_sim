@@ -260,8 +260,6 @@ void Swarm::PerformPostRenderingOperations()
         
         
             cv::Mat depthImage = std::get<2>(images.at(i));
-            std::string str = "../../data/swarm/depthOut" + std::to_string(i) + ".png";
-            cv::imwrite(str, depthImage);
             uint16_t* depth_img_data = new uint16_t[depthImage.cols * depthImage.rows];
             std::memcpy(depth_img_data, depthImage.data, depthImage.cols * depthImage.rows * 2);
             dynamic_arrays_depth.push_back(depth_img_data);
