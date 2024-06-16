@@ -61,9 +61,9 @@ if __name__ == "__main__":
     ids = swarm.spawn(4)
     sample_positions = np.array([
         [0, 0, 30.0],
-        [5,5,30],
-        [10,10,30],
-        [5,5,30],
+        [14,0,30],
+        [0,14,30],
+        [14,14,30],
     ])
 
     swarm.waypoints(ids, sample_positions)
@@ -133,11 +133,10 @@ if __name__ == "__main__":
         for i in range(512):
             for j in range(512):
                 if swarm.depth_images[id][i][j] == 3000:
-                    world_x, world_y = image_to_world_coordinates(sample_positions[id], image_radius[id], i, j)
+                    world_x, world_y = image_to_world_coordinates(sample_positions[id], image_radius[id], j, i)
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
                     if i == 256 and j == 256:
-                        print("test")
                         print("world_x: ", world_x, "World_y:", world_y)
                         print("world_x_idx: ", world_x_idx, "world_y_idx: ", world_y_idx)
                     if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
