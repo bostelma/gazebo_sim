@@ -226,7 +226,6 @@ class Swarm:
             img_arr = np.frombuffer(frame.depthImage.data, dtype=np.uint16, count=image_width*image_height)
             
             img_arr = np.reshape(img_arr, (image_width, image_height))
-            img_arr = np.repeat(img_arr[:, :, np.newaxis], 3, axis=2)
 
             self.depth_images[id] = copy.deepcopy(img_arr)
 

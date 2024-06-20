@@ -11,14 +11,13 @@ except ImportError:
     os.system('pip install matplotlib')
     import matplotlib.pyplot as plt
 
+
 def inspect_depth_image(depth_image, pixel_coords, drone_id):
     for coord in pixel_coords:
         pixel_value = depth_image[coord]
-        print(f"Drohne {drone_id} - Werte des Pixels bei {coord}: {pixel_value}")
 
     min_value = np.min(depth_image)
     max_value = np.max(depth_image)
-    print(f"Drohne {drone_id} - Minimale Tiefe: {min_value}, Maximale Tiefe: {max_value}")
 
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.hist(depth_image.flatten(), bins=100, color='gray')
@@ -36,6 +35,26 @@ def inspect_depth_image(depth_image, pixel_coords, drone_id):
     plt.axis('off')
     plt.show()
 
+def scatterplot(img, ax):
+    img_height, img_width = img.shape
+
+    z = 3000 - img
+    z = z / 100
+    x = np.arange(img_width)
+    y = np.arange(img_height)
+    x, y = np.meshgrid(x, y)
+
+    x = x.flatten()
+    y = y.flatten()
+    z = z.flatten()
+
+    scatter = ax.scatter(x, y, z, c=z, cmap='viridis')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z Depthvalue')
+
+    return scatter
+
 camera_params = {
     'fov': 50, 
     'image_size': (512, 512),  
@@ -50,11 +69,6 @@ def calculate_world_coordinates(drone_pos, image_radius, img_x, img_y):
     pos_y = drone_pos[1] + (img_y-256)/512 * image_radius * 2
     return (pos_x, pos_y)
 
-
-def image_to_world_coordinates(drone_pos, image_radius, img_x, img_y):
-    pos_x = drone_pos[0] + (img_x - 256) / 512 * image_radius * 2
-    pos_y = drone_pos[1] + (img_y - 256) / 512 * image_radius * 2
-    return pos_x, pos_y
 
 if __name__ == "__main__":
     swarm = Swarm("example_swarm")
@@ -79,7 +93,6 @@ if __name__ == "__main__":
     fov_radians = np.deg2rad(camera_params['fov'])
     img_width = camera_params['image_size'][0]
     img_height = camera_params['image_size'][1]
-    print(img_width, " ", img_height)
 
     MinX = [0,float('inf')]
     MaxX = [0,float('-inf')]
@@ -130,27 +143,51 @@ if __name__ == "__main__":
     p3 = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], img_width,img_height)[1]
     t = (p3-p2)/(p3-p1)
     arr_height = int(np.ceil(img_height + img_height - t * img_height)) 
-    
+
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
-    print(visibility_matrix)
+
     for id in ids:
         for i in range(img_width):
             for j in range(img_height):
                 if swarm.depth_images[id][i][j] == 3000:
-                    world_x, world_y = image_to_world_coordinates(sample_positions[id], image_radius[id], j, i)
+                    world_x, world_y = calculate_world_coordinates(sample_positions[id], image_radius[id], j, i)
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
                     if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
                         visibility_array[world_x_idx][world_y_idx] += 1
 
-    plt.figure(figsize=(10, 8))
-    plt.imshow(visibility_array, cmap='hot', interpolation='nearest')
-    plt.colorbar(label='Anzahl der Sichtbarkeiten')
-    plt.title('Sichtbarkeitsarray')
+    
+    num_drones = len(ids)
+    num_cols = 2
+    num_rows = (num_drones + num_cols - 1) // num_cols + 1  # Add one more row for the visibility array
+
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(20, 10))
+
+    # Plot the visibility array in the first row
+    ax_vis = axes[0, 0]
+    im_vis = ax_vis.imshow(visibility_array, cmap='hot', interpolation='nearest')
+    ax_vis.set_title('Sichtbarkeitsarray')
+    ax_vis.set_xlabel('X')
+    ax_vis.set_ylabel('Y')
+    fig.colorbar(im_vis, ax=ax_vis, label='Anzahl der Sichtbarkeiten')
+
+    # Hide the second subplot in the first row if it exists
+    if num_cols > 1:
+        axes[0, 1].axis('off')
+
+    # Plot scatterplots
+    for i, id in enumerate(ids):
+        row = (i + num_cols) // num_cols
+        col = (i + num_cols) % num_cols
+        ax = fig.add_subplot(num_rows, num_cols, row * num_cols + col + 1, projection='3d')
+        scatter = scatterplot(swarm.depth_images[id], ax)
+        ax.set_title(f'Drohne {id} - 3D Scatterplot')
+        fig.colorbar(scatter, ax=ax, label='Depthvalue')
+
+    plt.tight_layout()
     plt.show()
 
-    
 
 
 
