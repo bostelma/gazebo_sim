@@ -61,9 +61,9 @@ if __name__ == "__main__":
     ids = swarm.spawn(4)
     sample_positions = np.array([
         [0, 0, 30.0],
-        [14,0,30],
-        [0,14,30],
-        [14,14,30],
+        [10,0,30],
+        [0,5,30],
+        [5,5,30],
     ])
 
     swarm.waypoints(ids, sample_positions)
@@ -77,17 +77,22 @@ if __name__ == "__main__":
     world_coordinates_list = []
     image_radius = []
     fov_radians = np.deg2rad(camera_params['fov'])
-    
+    img_width = camera_params['image_size'][0]
+    img_height = camera_params['image_size'][1]
+    print(img_width, " ", img_height)
+
     MinX = [0,float('inf')]
     MaxX = [0,float('-inf')]
     MinY = [0,float('inf')]
     MaxY = [0,float('-inf')]
+
     while time_passed < timeout:
         if swarm.received_frames[ids[-1]]:
             for id in ids:
                 depth_image = swarm.depth_images[id]
                 x = sample_positions[id][0]
                 y = sample_positions[id][1]
+                #Determine the Minimum X,Y and Maximum X,Y of the sampling positions
                 if (x < MinX[1]):
                     MinX = [id, x]
                 if (x > MaxX[1]):
@@ -106,39 +111,36 @@ if __name__ == "__main__":
 
     if time_passed >= timeout:
         print("Timeout")
+
     MinX[1] = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], 0,0)[0]
-    MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], 512,512)[0]
+    MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], img_width,img_height)[0]
     MinY[1] = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], 0,0)[1]
-    MaxY[1] = calculate_world_coordinates(sample_positions[MaxY[0]], image_radius[MaxY[0]], 512,512)[1]
+    MaxY[1] = calculate_world_coordinates(sample_positions[MaxY[0]], image_radius[MaxY[0]], img_width, img_height)[1]
+
+    #Calculate how much the max and min images intersects and determine the needed Array-Width
     p1 = MinX[1]
     p2 = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], 0,0)[0]
-    p3 = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], 512,512)[0]
+    p3 = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], img_width,img_height)[0]
     t = (p3-p2)/(p3-p1)
-    WIDTH = 512
-    HEIGHT = 512
-    arr_width = int(np.ceil(WIDTH + WIDTH - t * WIDTH))
+    arr_width = int(np.ceil(img_width + img_width - t * img_height))
     
+    #Calculate how much the max and min images intersects and determine the needed Array-Height
     p1 = MinY[1]
     p2 = calculate_world_coordinates(sample_positions[MaxY[0]], image_radius[MaxY[0]], 0,0)[1]
-    p3 = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], 512,512)[1]
+    p3 = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], img_width,img_height)[1]
     t = (p3-p2)/(p3-p1)
-
-    arr_height = int(np.ceil(HEIGHT + HEIGHT - t * HEIGHT)) 
-    print("ah:", arr_height)
-    print("aw:", arr_width)
+    arr_height = int(np.ceil(img_height + img_height - t * img_height)) 
+    
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
     print(visibility_matrix)
     for id in ids:
-        for i in range(512):
-            for j in range(512):
+        for i in range(img_width):
+            for j in range(img_height):
                 if swarm.depth_images[id][i][j] == 3000:
                     world_x, world_y = image_to_world_coordinates(sample_positions[id], image_radius[id], j, i)
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
-                    if i == 256 and j == 256:
-                        print("world_x: ", world_x, "World_y:", world_y)
-                        print("world_x_idx: ", world_x_idx, "world_y_idx: ", world_y_idx)
                     if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
                         visibility_array[world_x_idx][world_y_idx] += 1
 

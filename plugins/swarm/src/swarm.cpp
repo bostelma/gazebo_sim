@@ -504,5 +504,5 @@ cv::Mat Swarm::TakePictureDepth(const gz::rendering::DepthCameraPtr _camera,
             std::placeholders::_4, std::placeholders::_5));
     _camera->Update();
 
-    return cv::Mat(height, width, CV_32F, depthData);
+    return cv::Mat(height, width, CV_32FC1, depthData);
 }
