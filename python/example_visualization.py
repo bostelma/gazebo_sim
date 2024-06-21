@@ -55,6 +55,27 @@ def scatterplot(img, ax):
 
     return scatter
 
+def shortestDistance(position, samplings):
+    position = np.array(position)
+    samplings = np.array(samplings)
+    
+    distances = np.linalg.norm(samplings - position, axis=1)
+    
+    min_index = np.argmin(distances)
+    
+    return min_index
+
+def plot_nearest_image(point, sample_positions, imgs):
+    # Find the index of the nearest sampling position
+    nearest_index = shortestDistance(point, sample_positions)
+
+    # Create a figure for the scatterplot of the nearest depth image
+    fig_nearest, ax_nearest = plt.subplots(subplot_kw={'projection': '3d'})
+    scatter_nearest = scatterplot(imgs[nearest_index], ax_nearest)
+    ax_nearest.set_title(f'Nearest Sampling Position Scatterplot (Point {point})')
+    fig_nearest.colorbar(scatter_nearest, ax=ax_nearest, label='Depthvalue')
+    plt.show()
+
 camera_params = {
     'fov': 50, 
     'image_size': (512, 512),  
@@ -75,7 +96,7 @@ if __name__ == "__main__":
     ids = swarm.spawn(4)
     sample_positions = np.array([
         [0, 0, 30.0],
-        [10,0,30],
+        [5,0,30],
         [0,5,30],
         [5,5,30],
     ])
@@ -98,6 +119,7 @@ if __name__ == "__main__":
     MaxX = [0,float('-inf')]
     MinY = [0,float('inf')]
     MaxY = [0,float('-inf')]
+    
 
     while time_passed < timeout:
         if swarm.received_frames[ids[-1]]:
@@ -150,7 +172,7 @@ if __name__ == "__main__":
     for id in ids:
         for i in range(img_width):
             for j in range(img_height):
-                if swarm.depth_images[id][i][j] == 3000:
+                if swarm.depth_images[id][i][j] == visibility_values[id]:
                     world_x, world_y = calculate_world_coordinates(sample_positions[id], image_radius[id], j, i)
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
@@ -158,6 +180,8 @@ if __name__ == "__main__":
                         visibility_array[world_x_idx][world_y_idx] += 1
 
     
+    plot_nearest_image([4,4,30], sample_positions, swarm.depth_images)
+
     num_drones = len(ids)
     num_cols = 2
     num_rows = (num_drones + num_cols - 1) // num_cols + 1  # Add one more row for the visibility array
