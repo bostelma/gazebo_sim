@@ -3,14 +3,24 @@ import cv2
 import numpy as np
 from swarm import Swarm
 
-
 try:
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
 except ImportError:
     import os
     os.system('pip install matplotlib')
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
 
+
+class Square:
+    def __init__(self, x, y, side_length):
+        self.x = x  
+        self.y = y  
+        self.side_length = side_length  
+
+    def contains_point(self, px, py):
+        return self.x <= px <= self.x + self.side_length and self.y <= py <= self.y + self.side_length
 
 def inspect_depth_image(depth_image, pixel_coords, drone_id):
     for coord in pixel_coords:
@@ -48,12 +58,28 @@ def scatterplot(img, ax):
     y = y.flatten()
     z = z.flatten()
 
+    # Filter out points with z <= 0
+    mask = z > 0
+    x = x[mask]
+    y = y[mask]
+    z = z[mask]
+
     scatter = ax.scatter(x, y, z, c=z, cmap='viridis')
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z Depthvalue')
 
     return scatter
+
+def add_zero_plane(ax, img):
+    img_height, img_width = img.shape
+
+    x = np.arange(img_width)
+    y = np.arange(img_height)
+    x, y = np.meshgrid(x, y)
+    z = np.zeros_like(x)
+
+    ax.plot_surface(x, y, z, color='darkgreen', alpha=0.5)
 
 def shortestDistance(position, samplings):
     position = np.array(position)
@@ -71,9 +97,9 @@ def plot_nearest_image(point, sample_positions, imgs):
 
     # Create a figure for the scatterplot of the nearest depth image
     fig_nearest, ax_nearest = plt.subplots(subplot_kw={'projection': '3d'})
-    scatter_nearest = scatterplot(imgs[nearest_index], ax_nearest)
+    scatterplot(imgs[nearest_index], ax_nearest)
+    add_zero_plane(ax_nearest, imgs[nearest_index])
     ax_nearest.set_title(f'Nearest Sampling Position Scatterplot (Point {point})')
-    fig_nearest.colorbar(scatter_nearest, ax=ax_nearest, label='Depthvalue')
     plt.show()
 
 camera_params = {
@@ -100,7 +126,8 @@ if __name__ == "__main__":
         [0,5,30],
         [5,5,30],
     ])
-
+    groundPoint = [0,0,0]
+    
     swarm.waypoints(ids, sample_positions)
 
     time_delta = 0.01
@@ -114,7 +141,10 @@ if __name__ == "__main__":
     fov_radians = np.deg2rad(camera_params['fov'])
     img_width = camera_params['image_size'][0]
     img_height = camera_params['image_size'][1]
+    
+    skyImage = np.zeros((img_width, img_height), int)
 
+    #[ID, Min/Max]
     MinX = [0,float('inf')]
     MaxX = [0,float('-inf')]
     MinY = [0,float('inf')]
@@ -139,6 +169,7 @@ if __name__ == "__main__":
                 
                 vectorized_images.append(depth_image.flatten())
                 image_radius.append(sample_positions[id][2] * np.tan(fov_radians/2))
+                print(sample_positions[id][2] * np.tan(fov_radians/2), "\n")
                 visibility_values.append(sample_positions[id][2] * 100)
             break
         time.sleep(time_delta)
@@ -146,7 +177,10 @@ if __name__ == "__main__":
 
     if time_passed >= timeout:
         print("Timeout")
-
+    
+    
+    sky_square = Square(groundPoint[0] - image_radius[0], groundPoint[1] - image_radius[0], 2*image_radius[0])
+    
     MinX[1] = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], 0,0)[0]
     MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], img_width,img_height)[0]
     MinY[1] = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], 0,0)[1]
@@ -200,19 +234,15 @@ if __name__ == "__main__":
     if num_cols > 1:
         axes[0, 1].axis('off')
 
-    # Plot scatterplots
+    # Plot scatterplots with the additional zero plane
     for i, id in enumerate(ids):
         row = (i + num_cols) // num_cols
         col = (i + num_cols) % num_cols
         ax = fig.add_subplot(num_rows, num_cols, row * num_cols + col + 1, projection='3d')
-        scatter = scatterplot(swarm.depth_images[id], ax)
-        ax.set_title(f'Drohne {id} - 3D Scatterplot')
-        fig.colorbar(scatter, ax=ax, label='Depthvalue')
+        scatterplot(swarm.depth_images[id], ax)
+        add_zero_plane(ax, swarm.depth_images[id])
+        ax.set_title(f'Drohne {id} - 3D Scatterplot with Zero Plane')
+        fig.colorbar(ax.collections[0], ax=ax, label='Depthvalue')
 
     plt.tight_layout()
     plt.show()
-
-
-
-
-
