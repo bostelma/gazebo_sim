@@ -116,17 +116,33 @@ def calculate_world_coordinates(drone_pos, image_radius, img_x, img_y):
     pos_y = drone_pos[1] + (img_y-256)/512 * image_radius * 2
     return (pos_x, pos_y)
 
+def fill_missing_points(SkyImage):
+    SkyImage = np.array(SkyImage)
+    
+    filled_array = np.copy(SkyImage)
+    set_points = np.where(SkyImage != -1)
+    set_values = SkyImage[set_points]
+    
+    for i in range(SkyImage.shape[0]):
+        for j in range(SkyImage.shape[1]):
+            if SkyImage[i, j] == -1:
+                nearest_index = np.argmin(np.abs(set_points[0] - i) + np.abs(set_points[1] - j))
+                filled_array[i, j] = set_values[nearest_index]
+    
+    return filled_array
 
 if __name__ == "__main__":
+    start_time = time.time()
     swarm = Swarm("example_swarm")
     ids = swarm.spawn(4)
     sample_positions = np.array([
         [0, 0, 30.0],
-        [5,0,30],
-        [0,5,30],
-        [5,5,30],
+        [0, 1, 30.0],
+        [0, 2, 30.0],
+        [0, 3, 30.0],
     ])
-    groundPoint = [0,0,0]
+
+    groundPoint = [0.5,0.5,0]
     
     swarm.waypoints(ids, sample_positions)
 
@@ -142,7 +158,7 @@ if __name__ == "__main__":
     img_width = camera_params['image_size'][0]
     img_height = camera_params['image_size'][1]
     
-    skyImage = np.zeros((img_width, img_height), int)
+    skyImage = np.full((img_width, img_height), -1)
 
     #[ID, Min/Max]
     MinX = [0,float('inf')]
@@ -169,7 +185,6 @@ if __name__ == "__main__":
                 
                 vectorized_images.append(depth_image.flatten())
                 image_radius.append(sample_positions[id][2] * np.tan(fov_radians/2))
-                print(sample_positions[id][2] * np.tan(fov_radians/2), "\n")
                 visibility_values.append(sample_positions[id][2] * 100)
             break
         time.sleep(time_delta)
@@ -202,47 +217,51 @@ if __name__ == "__main__":
 
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
-
+    
     for id in ids:
         for i in range(img_width):
             for j in range(img_height):
+                world_x, world_y = calculate_world_coordinates(sample_positions[id], image_radius[id], j, i)
+                if abs(world_x - groundPoint[0]) < 2 * image_radius[0]/img_width and abs(world_y - groundPoint[1]) < image_radius[0]/img_height:
+                    print("seen from: x: ", world_x, ", y: ", world_y, ", by drone: ", id, " with value: ", swarm.depth_images[id][i][j])
+                    dx = 256 - i
+                    dy = 256 - j
+                    skyImage[256 + dx][256 + dy] = abs(0-swarm.depth_images[id][i][j])
                 if swarm.depth_images[id][i][j] == visibility_values[id]:
-                    world_x, world_y = calculate_world_coordinates(sample_positions[id], image_radius[id], j, i)
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
                     if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
                         visibility_array[world_x_idx][world_y_idx] += 1
 
-    
-    plot_nearest_image([4,4,30], sample_positions, swarm.depth_images)
+    skyImage = fill_missing_points(skyImage)
+    plt.figure(figsize=(10, 8))
+    plt.imshow(skyImage, cmap='hot', interpolation='nearest')
+    plt.colorbar(label='Number of Detections')
+    plt.title('SkyImage Heatmap')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.show()
+    # Plot only two subplots: visibility array and scatterplot for drone 0
+    fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 
-    num_drones = len(ids)
-    num_cols = 2
-    num_rows = (num_drones + num_cols - 1) // num_cols + 1  # Add one more row for the visibility array
-
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(20, 10))
-
-    # Plot the visibility array in the first row
-    ax_vis = axes[0, 0]
+    # Plot the visibility array
+    ax_vis = axes[0]
     im_vis = ax_vis.imshow(visibility_array, cmap='hot', interpolation='nearest')
     ax_vis.set_title('Sichtbarkeitsarray')
     ax_vis.set_xlabel('X')
     ax_vis.set_ylabel('Y')
     fig.colorbar(im_vis, ax=ax_vis, label='Anzahl der Sichtbarkeiten')
 
-    # Hide the second subplot in the first row if it exists
-    if num_cols > 1:
-        axes[0, 1].axis('off')
-
-    # Plot scatterplots with the additional zero plane
-    for i, id in enumerate(ids):
-        row = (i + num_cols) // num_cols
-        col = (i + num_cols) % num_cols
-        ax = fig.add_subplot(num_rows, num_cols, row * num_cols + col + 1, projection='3d')
-        scatterplot(swarm.depth_images[id], ax)
-        add_zero_plane(ax, swarm.depth_images[id])
-        ax.set_title(f'Drohne {id} - 3D Scatterplot with Zero Plane')
-        fig.colorbar(ax.collections[0], ax=ax, label='Depthvalue')
+    # Plot scatterplot with the additional zero plane for drone 0
+    ax_scatter = fig.add_subplot(122, projection='3d')
+    scatterplot(swarm.depth_images[0], ax_scatter)
+    add_zero_plane(ax_scatter, swarm.depth_images[0])
+    ax_scatter.set_title(f'Drohne 0 - 3D Scatterplot with Zero Plane')
+    fig.colorbar(ax_scatter.collections[0], ax=ax_scatter, label='Depthvalue')
 
     plt.tight_layout()
     plt.show()
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    print("Elapsed_time: ", elapsed_time)
