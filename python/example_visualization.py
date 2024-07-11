@@ -12,16 +12,6 @@ except ImportError:
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
 
-
-class Square:
-    def __init__(self, x, y, side_length):
-        self.x = x  
-        self.y = y  
-        self.side_length = side_length  
-
-    def contains_point(self, px, py):
-        return self.x <= px <= self.x + self.side_length and self.y <= py <= self.y + self.side_length
-
 def inspect_depth_image(depth_image, pixel_coords, drone_id):
     for coord in pixel_coords:
         pixel_value = depth_image[coord]
@@ -134,27 +124,31 @@ def fill_missing_points(SkyImage):
 if __name__ == "__main__":
     start_time = time.time()
     swarm = Swarm("example_swarm")
-    ids = swarm.spawn(4)
+    drone_count = 4
+    ids = swarm.spawn(drone_count)
     sample_positions = np.array([
-        [0, 0, 30.0],
-        [0, 1, 30.0],
-        [0, 2, 30.0],
-        [0, 3, 30.0],
+        [-5, -2, 30.0],
+        [-5, -1, 30.0],
+        [-5, 1, 30.0],
+        [-5, 2, 30.0],
     ])
+    
+    depthImages = []
 
     groundPoint = [0.5,0.5,0]
     
-    swarm.waypoints(ids, sample_positions)
-
-    time_delta = 0.01
+    time_delta = 0.1
     time_passed = 0.0
-    timeout = 5.0
+    timeout = 20.0
 
+    sample_iterations = 10
+    sample_distance = 1
+    
     vectorized_images = []
-    visibility_values = []
+    visibility_value = sample_positions[0][2] * 100
     world_coordinates_list = []
-    image_radius = []
     fov_radians = np.deg2rad(camera_params['fov'])
+    image_radius = sample_positions[0][2] * np.tan(fov_radians/2)
     img_width = camera_params['image_size'][0]
     img_height = camera_params['image_size'][1]
     
@@ -166,68 +160,71 @@ if __name__ == "__main__":
     MinY = [0,float('inf')]
     MaxY = [0,float('-inf')]
     
-
-    while time_passed < timeout:
-        if swarm.received_frames[ids[-1]]:
-            for id in ids:
-                depth_image = swarm.depth_images[id]
-                x = sample_positions[id][0]
-                y = sample_positions[id][1]
-                #Determine the Minimum X,Y and Maximum X,Y of the sampling positions
-                if (x < MinX[1]):
-                    MinX = [id, x]
-                if (x > MaxX[1]):
-                    MaxX = [id, x]
-                if (y < MinY[1]):
-                    MinY = [id, y]
-                if (y > MaxY[1]):
-                    MaxY = [id, y]
+    
+    for i in range(sample_iterations):
+        shifts = np.array([[i * sample_distance, 0, 0]] * drone_count)
+        cur_sample_positions = sample_positions + shifts
+        
+        swarm.waypoints(ids, cur_sample_positions)
+        while time_passed < timeout:
+            if swarm.received_frames[ids[-1]]:
+                for id in ids:
+                    depthImages.append(swarm.depth_images[id])
+                break
+            time.sleep(time_delta)
+            time_passed += time_delta
                 
-                vectorized_images.append(depth_image.flatten())
-                image_radius.append(sample_positions[id][2] * np.tan(fov_radians/2))
-                visibility_values.append(sample_positions[id][2] * 100)
-            break
-        time.sleep(time_delta)
-        time_passed += time_delta
-
     if time_passed >= timeout:
         print("Timeout")
-    
-    
-    sky_square = Square(groundPoint[0] - image_radius[0], groundPoint[1] - image_radius[0], 2*image_radius[0])
-    
-    MinX[1] = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], 0,0)[0]
-    MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], img_width,img_height)[0]
-    MinY[1] = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], 0,0)[1]
-    MaxY[1] = calculate_world_coordinates(sample_positions[MaxY[0]], image_radius[MaxY[0]], img_width, img_height)[1]
+    for id in range(len(ids) * sample_iterations):
+        depth_image = depthImages[id]
+        x = sample_positions[id % drone_count][0] + i * sample_distance * np.floor(id / drone_count)
+        y = sample_positions[id % drone_count][1] + i * sample_distance * np.floor(id / drone_count)
+
+        #Determine the Minimum X,Y and Maximum X,Y of the sampling positions
+        if (x < MinX[1]):
+            MinX = [id, x]
+        if (x > MaxX[1]):
+            MaxX = [id, x]
+        if (y < MinY[1]):
+            MinY = [id, y]
+        if (y > MaxY[1]):
+            MaxY = [id, y]
+                
+        vectorized_images.append(depth_image.flatten())
+
+    MinX[1] = calculate_world_coordinates(sample_positions[MinX[0] % drone_count] + np.array([np.floor(MinX[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[0]
+    MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0] % drone_count] + np.array([np.floor(MaxX[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[0]
+    MinY[1] = calculate_world_coordinates(sample_positions[MinY[0] % drone_count] + np.array([np.floor(MinY[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[1]
+    MaxY[1] = calculate_world_coordinates(sample_positions[MaxY[0] % drone_count] + np.array([np.floor(MaxY[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width, img_height)[1]
 
     #Calculate how much the max and min images intersects and determine the needed Array-Width
     p1 = MinX[1]
-    p2 = calculate_world_coordinates(sample_positions[MaxX[0]], image_radius[MaxX[0]], 0,0)[0]
-    p3 = calculate_world_coordinates(sample_positions[MinX[0]], image_radius[MinX[0]], img_width,img_height)[0]
+    p2 = calculate_world_coordinates(sample_positions[MaxX[0] % drone_count] + np.array([np.floor(MaxX[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0, 0)[0]
+    p3 = calculate_world_coordinates(sample_positions[MinX[0] % drone_count] + np.array([np.floor(MinX[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[0]
     t = (p3-p2)/(p3-p1)
     arr_width = int(np.ceil(img_width + img_width - t * img_height))
     
     #Calculate how much the max and min images intersects and determine the needed Array-Height
     p1 = MinY[1]
-    p2 = calculate_world_coordinates(sample_positions[MaxY[0]], image_radius[MaxY[0]], 0,0)[1]
-    p3 = calculate_world_coordinates(sample_positions[MinY[0]], image_radius[MinY[0]], img_width,img_height)[1]
+    p2 = calculate_world_coordinates(sample_positions[MaxY[0] % drone_count] + np.array([np.floor(MaxY[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[1]
+    p3 = calculate_world_coordinates(sample_positions[MinY[0] % drone_count] + np.array([np.floor(MinY[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[1]
     t = (p3-p2)/(p3-p1)
     arr_height = int(np.ceil(img_height + img_height - t * img_height)) 
 
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
     
-    for id in ids:
+    for id in range(len(ids) * sample_iterations):
         for i in range(img_width):
             for j in range(img_height):
-                world_x, world_y = calculate_world_coordinates(sample_positions[id], image_radius[id], j, i)
-                if abs(world_x - groundPoint[0]) < 2 * image_radius[0]/img_width and abs(world_y - groundPoint[1]) < image_radius[0]/img_height:
-                    print("seen from: x: ", world_x, ", y: ", world_y, ", by drone: ", id, " with value: ", swarm.depth_images[id][i][j])
+                world_x, world_y = calculate_world_coordinates(sample_positions[id % drone_count] + np.array([np.floor(id / drone_count) * sample_distance, 0, 0]), image_radius, j, i)
+                if abs(world_x - groundPoint[0]) < 2 * image_radius/img_width and abs(world_y - groundPoint[1]) < image_radius/img_height:
+                    #print("seen from: x: ", world_x, ", y: ", world_y, ", by drone: ", id % drone_count, " with value: ", depthImages[id][i][j])
                     dx = 256 - i
                     dy = 256 - j
-                    skyImage[256 + dx][256 + dy] = abs(0-swarm.depth_images[id][i][j])
-                if swarm.depth_images[id][i][j] == visibility_values[id]:
+                    skyImage[256 + dx][256 + dy] = abs(0-depthImages[id][i][j])
+                if depthImages[id][i][j] == visibility_value:
                     world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                     world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
                     if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
@@ -254,7 +251,7 @@ if __name__ == "__main__":
 
     # Plot scatterplot with the additional zero plane for drone 0
     ax_scatter = fig.add_subplot(122, projection='3d')
-    scatterplot(swarm.depth_images[0], ax_scatter)
+    scatterplot(depthImages[0], ax_scatter)
     add_zero_plane(ax_scatter, swarm.depth_images[0])
     ax_scatter.set_title(f'Drohne 0 - 3D Scatterplot with Zero Plane')
     fig.colorbar(ax_scatter.collections[0], ax=ax_scatter, label='Depthvalue')

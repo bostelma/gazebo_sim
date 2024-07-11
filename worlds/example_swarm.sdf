@@ -41,7 +41,7 @@
             <ground_texture>0</ground_texture>
             <generate>true</generate>
             <size>10</size>
-            <trees>1</trees>
+            <trees>5</trees>
             <ground_temperature>288.15</ground_temperature>
             <texture_size>1</texture_size>
             <species name="None">
