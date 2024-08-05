@@ -40,8 +40,8 @@
             <seed>0</seed>
             <ground_texture>0</ground_texture>
             <generate>true</generate>
-            <size>10</size>
-            <trees>5</trees>
+            <size>50</size>
+            <trees>30</trees>
             <ground_temperature>288.15</ground_temperature>
             <texture_size>1</texture_size>
             <species name="None">

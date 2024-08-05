@@ -11,7 +11,7 @@ except ImportError:
     os.system('pip install matplotlib')
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
-
+    
 def inspect_depth_image(depth_image, pixel_coords, drone_id):
     for coord in pixel_coords:
         pixel_value = depth_image[coord]
@@ -106,6 +106,15 @@ def calculate_world_coordinates(drone_pos, image_radius, img_x, img_y):
     pos_y = drone_pos[1] + (img_y-256)/512 * image_radius * 2
     return (pos_x, pos_y)
 
+def parallel_world_coordinates(drone_pos, image_radius, img_y):
+    pos_x = [i for i in range(512)]
+    pos_x = (pos_x - np.asarray(256)) / 512 * image_radius * 2 + drone_pos[0]
+    pos_y = drone_pos[1] + (img_y-256)/512 * image_radius * 2
+    pos_y = np.asarray(pos_y)
+    return (pos_x, pos_y)
+
+
+
 def fill_missing_points(SkyImage):
     SkyImage = np.array(SkyImage)
     
@@ -121,16 +130,18 @@ def fill_missing_points(SkyImage):
     
     return filled_array
 
+
+
 if __name__ == "__main__":
     start_time = time.time()
     swarm = Swarm("example_swarm")
     drone_count = 4
     ids = swarm.spawn(drone_count)
     sample_positions = np.array([
-        [-5, -2, 30.0],
-        [-5, -1, 30.0],
-        [-5, 1, 30.0],
-        [-5, 2, 30.0],
+        [-3, -2, 30.0],
+        [-3, -1, 30.0],
+        [-3, 1, 30.0],
+        [-3, 2, 30.0],
     ])
     
     depthImages = []
@@ -141,9 +152,9 @@ if __name__ == "__main__":
     time_passed = 0.0
     timeout = 20.0
 
-    sample_iterations = 10
+    sample_iterations = 6
     sample_distance = 1
-    
+
     vectorized_images = []
     visibility_value = sample_positions[0][2] * 100
     world_coordinates_list = []
@@ -173,7 +184,9 @@ if __name__ == "__main__":
                 break
             time.sleep(time_delta)
             time_passed += time_delta
-                
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("Elapsed_time after sampling: ", elapsed_time)        
     if time_passed >= timeout:
         print("Timeout")
     for id in range(len(ids) * sample_iterations):
@@ -193,46 +206,77 @@ if __name__ == "__main__":
                 
         vectorized_images.append(depth_image.flatten())
 
-    MinX[1] = calculate_world_coordinates(sample_positions[MinX[0] % drone_count] + np.array([np.floor(MinX[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[0]
-    MaxX[1] = calculate_world_coordinates(sample_positions[MaxX[0] % drone_count] + np.array([np.floor(MaxX[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[0]
-    MinY[1] = calculate_world_coordinates(sample_positions[MinY[0] % drone_count] + np.array([np.floor(MinY[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[1]
-    MaxY[1] = calculate_world_coordinates(sample_positions[MaxY[0] % drone_count] + np.array([np.floor(MaxY[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width, img_height)[1]
+    calculate_coordinates = lambda m, w, h: calculate_world_coordinates(
+        sample_positions[m % drone_count] + np.array([np.floor(m / drone_count) * sample_distance,0,0]),
+        image_radius,
+        w,
+        h
+    )
+
+    MinX[1] = calculate_coordinates(MinX[0], 0, 0)[0]
+    MaxX[1] = calculate_coordinates(MaxX[0], img_width, img_height)[0]
+    MinY[1] = calculate_coordinates(MinY[0], 0, 0)[1]
+    MaxY[1] = calculate_coordinates(MaxY[0], img_width, img_height)[1]
 
     #Calculate how much the max and min images intersects and determine the needed Array-Width
     p1 = MinX[1]
-    p2 = calculate_world_coordinates(sample_positions[MaxX[0] % drone_count] + np.array([np.floor(MaxX[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0, 0)[0]
-    p3 = calculate_world_coordinates(sample_positions[MinX[0] % drone_count] + np.array([np.floor(MinX[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[0]
+    p2 = calculate_coordinates(MaxX[0], 0, 0)[0]
+    p3 = calculate_coordinates(MinX[0], img_width, img_height)[0]
+
     t = (p3-p2)/(p3-p1)
     arr_width = int(np.ceil(img_width + img_width - t * img_height))
     
     #Calculate how much the max and min images intersects and determine the needed Array-Height
     p1 = MinY[1]
-    p2 = calculate_world_coordinates(sample_positions[MaxY[0] % drone_count] + np.array([np.floor(MaxY[0] / drone_count) * sample_distance, 0, 0]), image_radius, 0,0)[1]
-    p3 = calculate_world_coordinates(sample_positions[MinY[0] % drone_count] + np.array([np.floor(MinY[0] / drone_count) * sample_distance, 0, 0]), image_radius, img_width,img_height)[1]
+    p2 = calculate_coordinates(MaxY[0], 0, 0)[1]
+    p3 = calculate_coordinates(MaxY[0], img_width, img_height)[1]
+
     t = (p3-p2)/(p3-p1)
     arr_height = int(np.ceil(img_height + img_height - t * img_height)) 
 
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
-    
+    test = []
+
     for id in range(len(ids) * sample_iterations):
         for i in range(img_width):
-            for j in range(img_height):
-                world_x, world_y = calculate_world_coordinates(sample_positions[id % drone_count] + np.array([np.floor(id / drone_count) * sample_distance, 0, 0]), image_radius, j, i)
-                if abs(world_x - groundPoint[0]) < 2 * image_radius/img_width and abs(world_y - groundPoint[1]) < image_radius/img_height:
-                    #print("seen from: x: ", world_x, ", y: ", world_y, ", by drone: ", id % drone_count, " with value: ", depthImages[id][i][j])
-                    dx = 256 - i
-                    dy = 256 - j
-                    skyImage[256 + dx][256 + dy] = abs(0-depthImages[id][i][j])
-                if depthImages[id][i][j] == visibility_value:
-                    world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
-                    world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
-                    if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
-                        visibility_array[world_x_idx][world_y_idx] += 1
+            #Vectorised calculation
+            world_x, world_y = parallel_world_coordinates(sample_positions[id%drone_count] + np.array([np.floor(id/drone_count) * sample_distance, 0, 0]),image_radius, i)
+            img_rad = np.asarray(2 *image_radius / img_width)
+            test = abs(world_x - np.asarray(groundPoint[0]))
+            test2 = test < img_rad
+            if test2.any() and abs(world_y - groundPoint[1]) < img_rad:
+                j = np.where(test2)[0][0]
+                dx = 256 - i
+                dy = 256 - j
+                skyImage[256 + dx][256 + dy] = abs(0-depthImages[id][i][j])
+
+            visTest = np.where(depthImages[id][i] == visibility_value)[0]
+            visTest2 = len(visTest)
+            for j in range(visTest2):
+                world_x_idx = int(((world_x[visTest[j]] - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
+                world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
+                visibility_array[world_x_idx][world_y_idx] += 1
+
+
+    #for id in range(len(ids) * sample_iterations):
+     #   for i in range(img_width):
+      #      for j in range(img_height):
+       #         world_x, world_y = calculate_coordinates(id, j, i)
+        #        if depthImages[id][i][j] == visibility_value:
+         #           world_x_idx = int(((world_x - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
+          #          world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
+           #         if 0 <= world_x_idx < arr_width and 0 <= world_y_idx < arr_height:
+            #            visibility_array[world_x_idx][world_y_idx] += 1
 
     skyImage = fill_missing_points(skyImage)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("Elapsed_time: ", elapsed_time)
+
     plt.figure(figsize=(10, 8))
-    plt.imshow(skyImage, cmap='hot', interpolation='nearest')
+    plt.imshow(skyImage, cmap='bone', interpolation='nearest')
     plt.colorbar(label='Number of Detections')
     plt.title('SkyImage Heatmap')
     plt.xlabel('X')
@@ -258,7 +302,5 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
-    end_time = time.time()
 
-    elapsed_time = end_time - start_time
-    print("Elapsed_time: ", elapsed_time)
+    
