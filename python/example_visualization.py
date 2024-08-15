@@ -113,8 +113,6 @@ def parallel_world_coordinates(drone_pos, image_radius, img_y):
     pos_y = np.asarray(pos_y)
     return (pos_x, pos_y)
 
-
-
 def fill_missing_points(SkyImage):
     SkyImage = np.array(SkyImage)
     
@@ -236,17 +234,17 @@ if __name__ == "__main__":
 
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
-    test = []
+    distances = []
 
     for id in range(len(ids) * sample_iterations):
         for i in range(img_width):
             #Vectorised calculation
             world_x, world_y = parallel_world_coordinates(sample_positions[id%drone_count] + np.array([np.floor(id/drone_count) * sample_distance, 0, 0]),image_radius, i)
             img_rad = np.asarray(2 *image_radius / img_width)
-            test = abs(world_x - np.asarray(groundPoint[0]))
-            test2 = test < img_rad
-            if test2.any() and abs(world_y - groundPoint[1]) < img_rad:
-                j = np.where(test2)[0][0]
+            distances = abs(world_x - np.asarray(groundPoint[0]))
+            insideImage = distances < img_rad
+            if insideImage.any() and abs(world_y - groundPoint[1]) < img_rad:
+                j = np.where(insideImage)[0][0]
                 dx = 256 - i
                 dy = 256 - j
                 skyImage[256 + dx][256 + dy] = abs(0-depthImages[id][i][j])
