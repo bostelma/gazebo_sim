@@ -1,18 +1,39 @@
 import time
+import os
 import cv2
 import numpy as np
 from swarm import Swarm
-
-try:
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
-except ImportError:
-    import os
-    os.system('pip install matplotlib')
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # Import für 3D-Plot
     
+
+def clear_console():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def inspect_depth_image(depth_image, pixel_coords, drone_id):
+
+    '''Analyzes and visualizes a depth image by creating a histogram and marking specific pixel coordinates.
+
+    Parameters
+    ----------
+    depth_image : 2D numpy array
+        The depth image captured by the drone, where each pixel value represents a depth measurement.
+    
+    pixel_coords : list of tuples
+        A list of (row, column) coordinates for pixels in the image that should be highlighted.
+    
+    drone_id : int
+        The ID of the drone that captured the image, used for labeling in the visualizations.
+
+    Returns
+    -------
+    None
+        The function displays the histogram and depth image with marked coordinates, but does not return any values.
+    '''
+
+
     for coord in pixel_coords:
         pixel_value = depth_image[coord]
 
@@ -36,6 +57,21 @@ def inspect_depth_image(depth_image, pixel_coords, drone_id):
     plt.show()
 
 def scatterplot(img, ax):
+    '''Generates a 3D scatter plot from an image.
+
+    Parameters
+    ----------
+    img : 2D numpy array
+        The grayscale image to be plotted, where pixel values represent depth information.
+    
+    ax : matplotlib.axes._subplots.Axes3DSubplot
+        The 3D axis object on which to create the scatter plot.
+        
+    Returns
+    -------
+    scatter : matplotlib.collections.PathCollection
+        The scatter plot object created on the provided axis.
+    '''
     img_height, img_width = img.shape
 
     z = 3000 - img
@@ -72,6 +108,21 @@ def add_zero_plane(ax, img):
     ax.plot_surface(x, y, z, color='darkgreen', alpha=0.5)
 
 def shortestDistance(position, samplings):
+    '''Finds the nearest sampling point to a given position.
+
+    Parameters
+    ----------
+    position : tuple or list of float
+        The target position as a 3D coordinate (x, y, z) for which the nearest sampling point should be found.
+        
+    samplings : list of tuple or list of float
+        A list of sampled positions, each represented as a 3D coordinate (x, y, z).
+        
+    Returns
+    -------
+    min_index : int
+        The index of the nearest sampling point in the list of sampled positions.
+    '''
     position = np.array(position)
     samplings = np.array(samplings)
     
@@ -82,6 +133,24 @@ def shortestDistance(position, samplings):
     return min_index
 
 def plot_nearest_image(point, sample_positions, imgs):
+    '''Generates a 3D scatter plot of the depth image closest to a given point.
+    Parameters
+    ----------
+    point : tuple or list of float
+        The target 3D coordinate (x, y, z) for which the nearest sampling position should be found.
+    
+    sample_positions : list of tuple or list of float
+        A list of 3D coordinates representing the sampled positions.
+    
+    imgs : list of 2D numpy arrays
+        A list of depth images corresponding to each sampled position. Each image is a 2D array where pixel values represent depth.
+
+    Returns
+    -------
+    None
+        The function displays a 3D scatter plot of the depth image nearest to the given point, but does not return any values.
+    '''
+
     # Find the index of the nearest sampling position
     nearest_index = shortestDistance(point, sample_positions)
 
@@ -114,6 +183,22 @@ def parallel_world_coordinates(drone_pos, image_radius, img_y):
     return (pos_x, pos_y)
 
 def fill_missing_points(SkyImage):
+    '''Fills missing data points in a 2D image array by interpolating from the nearest known points.
+
+    This function takes a 2D array representing an image, where missing points are marked by -1.
+    It fills these missing points by finding the nearest non-missing points (in Manhattan distance)
+    and assigning their values to the missing points.
+
+    Parameters
+    ----------
+    SkyImage : 2D array-like
+        The input image array where missing points are indicated by -1.
+
+    Returns
+    -------
+    filled_array : 2D numpy array
+        A copy of the input image array with missing points filled by the nearest known values.
+    '''
     SkyImage = np.array(SkyImage)
     
     filled_array = np.copy(SkyImage)
@@ -133,24 +218,32 @@ def fill_missing_points(SkyImage):
 if __name__ == "__main__":
     start_time = time.time()
     swarm = Swarm("example_swarm")
-    drone_count = 4
+    # Set the number of drones to be spawned in the swarm
+    drone_count = 6
     ids = swarm.spawn(drone_count)
+
+    # Set the sample_positions given to the swarm (Count must be equal to the amount of drones)
     sample_positions = np.array([
-        [-3, -2, 30.0],
-        [-3, -1, 30.0],
-        [-3, 1, 30.0],
-        [-3, 2, 30.0],
+        [-10, -10, 30.0],
+        [-10, -9, 30.0],
+        [-10, -8, 30.0],
+        [-10, -7, 30.0],
+        [-10, -6, 30.0],
+        [-10, -5, 30.0],
     ])
     
     depthImages = []
 
-    groundPoint = [0.5,0.5,0]
+    # Set the ground point for which the reciprocal visibility from sky points will be determined
+    groundPoint = [0, 0, 0]
     
     time_delta = 0.1
     time_passed = 0.0
-    timeout = 20.0
+    # Set the time limit before a timeout occurs; adjust this based on the number of images to be sampled
+    timeout = 600.0
 
-    sample_iterations = 6
+    # Set the amount of sample iterations and steps between 2 points in the grid
+    sample_iterations = 10
     sample_distance = 1
 
     vectorized_images = []
@@ -171,6 +264,7 @@ if __name__ == "__main__":
     
     
     for i in range(sample_iterations):
+        # Create the current sample positions by shifting each drone's position by i * sample_distance along the x-axis
         shifts = np.array([[i * sample_distance, 0, 0]] * drone_count)
         cur_sample_positions = sample_positions + shifts
         
@@ -187,12 +281,13 @@ if __name__ == "__main__":
     print("Elapsed_time after sampling: ", elapsed_time)        
     if time_passed >= timeout:
         print("Timeout")
+    
     for id in range(len(ids) * sample_iterations):
         depth_image = depthImages[id]
         x = sample_positions[id % drone_count][0] + i * sample_distance * np.floor(id / drone_count)
         y = sample_positions[id % drone_count][1] + i * sample_distance * np.floor(id / drone_count)
 
-        #Determine the Minimum X,Y and Maximum X,Y of the sampling positions
+        #Determine the global Minimum X,Y and global Maximum X,Y of all sampling positions
         if (x < MinX[1]):
             MinX = [id, x]
         if (x > MaxX[1]):
@@ -204,6 +299,23 @@ if __name__ == "__main__":
                 
         vectorized_images.append(depth_image.flatten())
 
+    # Lambda function to calculate world coordinates for a given pixel in a depth image.
+    # This function transforms image coordinates into real-world coordinates based on
+    # the drone's position, the image's dimensions, and the camera's field of view.
+
+    # Parameters:
+    # m : int
+    #     Index representing the current image or pixel being processed.
+    # w : int
+    #     Width of the depth image.
+    # h : int
+    #     Height of the depth image.
+
+    # Returns:
+    # tuple
+    #     A tuple (pos_x, pos_y) representing the world coordinates of the pixel.
+    #     These coordinates are computed from the sample position of the drone, 
+    #     the image radius, and the pixel's position in the image.
     calculate_coordinates = lambda m, w, h: calculate_world_coordinates(
         sample_positions[m % drone_count] + np.array([np.floor(m / drone_count) * sample_distance,0,0]),
         image_radius,
@@ -211,6 +323,7 @@ if __name__ == "__main__":
         h
     )
 
+    #calculate world coordinates of the Min and Max points
     MinX[1] = calculate_coordinates(MinX[0], 0, 0)[0]
     MaxX[1] = calculate_coordinates(MaxX[0], img_width, img_height)[0]
     MinY[1] = calculate_coordinates(MinY[0], 0, 0)[1]
@@ -235,11 +348,22 @@ if __name__ == "__main__":
     visibility_array = np.zeros((int(arr_width), (int(arr_height))), int)
     visibility_matrix = np.array(vectorized_images)
     distances = []
-
+    
     for id in range(len(ids) * sample_iterations):
+        # Display current progress
+        clear_console()
+        progress = "#" * id
+        remaining = "-" * (len(ids) * sample_iterations - id)
+        output = f"[{progress}{remaining}]"
+        print(output)
+
         for i in range(img_width):
-            #Vectorised calculation
+            # Vectorized calculation of world coordinates for the current image column
+            # Compute the world coordinates (x, y) for each pixel column in the depth image.
             world_x, world_y = parallel_world_coordinates(sample_positions[id%drone_count] + np.array([np.floor(id/drone_count) * sample_distance, 0, 0]),image_radius, i)
+
+            # Calculate if the ground point is found in the current column of the image
+            # If so, write the "reversed" depth value into the skyImage
             img_rad = np.asarray(2 *image_radius / img_width)
             distances = abs(world_x - np.asarray(groundPoint[0]))
             insideImage = distances < img_rad
@@ -249,11 +373,14 @@ if __name__ == "__main__":
                 dy = 256 - j
                 skyImage[256 + dx][256 + dy] = abs(0-depthImages[id][i][j])
 
+            # Identify pixels in the depth image where the value matches the visibility value
             visTest = np.where(depthImages[id][i] == visibility_value)[0]
             visTest2 = len(visTest)
+            # For each identified pixel, calculate the corresponding world coordinates index in the visibility array
             for j in range(visTest2):
                 world_x_idx = int(((world_x[visTest[j]] - MinX[1]) / (MaxX[1] - MinX[1])) * arr_width)
                 world_y_idx = int(((world_y - MinY[1]) / (MaxY[1] - MinY[1])) * arr_height)
+                # Increment the count of visible points at the calculated index in the visibility array
                 visibility_array[world_x_idx][world_y_idx] += 1
 
 
