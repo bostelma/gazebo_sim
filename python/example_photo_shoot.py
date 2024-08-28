@@ -38,7 +38,7 @@ if __name__ == "__main__":
     person_config.set_model_pose("sitting")                 # Must match a .dae mesh file
                                                             # in the respective model!
     person_config.set_temperature(307)                      # In Kelvin
-    person_config.set_pose(gzm.Pose3d(0, 0, 0, 0, 0, 0))    # First three values are x, y, z coordinates 
+    person_config.add_pose(gzm.Pose3d(0, 0, 0, 0, 0, 0))    # First three values are x, y, z coordinates 
     world_config.add_plugin(person_config)
 
     # Configure the photo shoot plugin. See the respective python file 
