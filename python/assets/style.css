@@ -1,0 +1,23 @@
+/* styles.css */
+
+button {
+    background-color: #ffffff; /* Grüne Hintergrundfarbe */
+    border: 2px solid #000000  ;            /* Keine Umrandung */
+    color: rgb(0, 0, 0);              /* Textfarbe */
+    padding: 15px 32px;        /* Innenabstand */
+    text-align: center;        /* Text zentrieren */
+    text-decoration: none;     /* Keine Unterstreichung */
+    display: inline-block;     /* Neben anderen Elementen anzeigen */
+    font-size: 16px;           /* Schriftgröße */
+    margin: 0px 0px;           /* Abstand zu anderen Elementen */
+    transition-duration: 0.4s; /* Übergangszeit für Hover-Effekte */
+    cursor: pointer;           /* Mauszeiger ändern */
+    border-radius: 0px;       /* Abgerundete Ecken */
+}
+
+/* Hover-Effekt für Button */
+button:hover {
+    background-color: rgb(0, 0, 0);  /* Hintergrundfarbe ändern beim Hovern */
+    color: rgb(247, 247, 247);             /* Textfarbe ändern beim Hovern */
+    border: 2px solid #4CAF50;
+}
