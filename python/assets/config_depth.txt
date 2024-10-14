@@ -1,0 +1,11 @@
+# Konfiguration für Tiefe
+dropdown-1=opt3
+dropdown-2=opt1
+dropdown-3=opt1
+dropdown-4=opt2
+dropdown-5=opt3
+slider-1=30
+slider-2=20
+slider-3=10
+slider-4=40
+slider-5=90

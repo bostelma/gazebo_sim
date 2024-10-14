@@ -1,6 +1,8 @@
 import dash
 from dash import html, dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
+import pandas as pd
+import os
 
 # Initialize Dash App
 app = dash.Dash(__name__)
@@ -14,8 +16,6 @@ app.layout = html.Div([
             'padding': '10px', 'border-right': '2px solid black', 'position': 'relative'
         },
         children=[
-            html.H2("Linker Bereich"),
-            html.P("Wähle ein Bild aus:"),
             # Container for image
             html.Div(
                 style={'position': 'relative', 'width': '100%', 'height': 'auto'},
@@ -53,7 +53,14 @@ app.layout = html.Div([
             'padding': '10px'
         },
         children=[
-            html.H2("Rechter Bereich"),
+            html.Div(
+                style={'display': 'flex', 'justify-content': 'center', 'gap': '10px', 'margin-bottom': '20px'},
+                children=[
+                    html.Button('RGB', id='button-rgb-right', n_clicks=0),
+                    html.Button('Thermal', id='button-th-right', n_clicks=0),
+                    html.Button('Tiefe', id='button-dp-right', n_clicks=0)
+                ]
+            ),
             # Dropdowns
             html.Div(id='dropdowns-container', children=[
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -166,28 +173,99 @@ app.layout = html.Div([
                 ])
             ]),
             # Apply Button
-            html.Button('Apply', id='apply-button', n_clicks=0, 
-                        style={'margin-top': '20px', 'width': '100%'})  
+            html.Div(
+                style={'text-align': 'center', 'margin-top': '20px'},
+                children=[
+                    html.Button('Apply', id='button-apply', n_clicks=0)
+                ]
+            )
         ]
     )
 ])
 
-# Callback to update the image based on button clicks
+# Function to read config from files
+def read_config(file_name):
+    config = {}
+    file_path = os.path.join('assets', file_name)  # Update the path to include 'assets/'
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('#') or line.strip() == '':
+                continue  # Skip comments and empty lines
+            key, value = line.strip().split('=')
+            config[key] = value
+    return config
+
+# Callbacks for button clicks to load configs
 @app.callback(
-    Output('image-display', 'src'),
+    [Output('dropdown-1', 'value'),
+     Output('dropdown-2', 'value'),
+     Output('dropdown-3', 'value'),
+     Output('dropdown-4', 'value'),
+     Output('dropdown-5', 'value'),
+     Output('slider-1', 'value'),
+     Output('slider-2', 'value'),
+     Output('slider-3', 'value'),
+     Output('slider-4', 'value'),
+     Output('slider-5', 'value'),
+     Output('image-display', 'src')],  # Output for image source
     [Input('button-rgb', 'n_clicks'),
      Input('button-th', 'n_clicks'),
-     Input('button-dp', 'n_clicks')]
+     Input('button-dp', 'n_clicks'),
+     Input('button-rgb-right', 'n_clicks'),
+     Input('button-th-right', 'n_clicks'),
+     Input('button-dp-right', 'n_clicks')]
 )
-def update_image(n_clicks1, n_clicks2, n_clicks3):
-    if n_clicks1 > n_clicks2 and n_clicks1 > n_clicks3:
-        return '/assets/pose_0_rgb.png'  # Image 1
-    elif n_clicks2 > n_clicks1 and n_clicks2 > n_clicks3:
-        return '/assets/pose_0_thermal.png'  # Image 2
-    elif n_clicks3 > n_clicks1 and n_clicks3 > n_clicks2:
-        return '/assets/pose_0_depth.png'  # Image 3
-    return '/assets/pose_0_rgb.png'  # Default image (RGB)
+def load_config(n_rgb, n_th, n_dp, n_rgb_right, n_th_right, n_dp_right):
+    ctx = dash.callback_context
 
-# Start the server
+    if not ctx.triggered:
+        return dash.no_update
+
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    # Initialize default values
+    config = {
+        'dropdown-1': 'opt1',
+        'dropdown-2': 'opt1',
+        'dropdown-3': 'opt1',
+        'dropdown-4': 'opt1',
+        'dropdown-5': 'opt1',
+        'slider-1': 50,
+        'slider-2': 50,
+        'slider-3': 50,
+        'slider-4': 50,
+        'slider-5': 50,
+        'image_src': '/assets/pose_0_rgb.png'  # Default image
+    }
+
+    # Load config based on which button was clicked
+    if 'rgb' in button_id:
+        config = read_config('config_rgb.txt')
+        image_src = '/assets/pose_0_rgb.png'  # Image for RGB
+    elif 'th' in button_id:
+        config = read_config('config_thermal.txt')
+        image_src = '/assets/pose_0_thermal.png'  # Image for Thermal
+    elif 'dp' in button_id:
+        config = read_config('config_depth.txt')
+        image_src = '/assets/pose_0_depth.png'  # Image for Depth
+    else:
+        return dash.no_update
+
+    # Update dropdown and slider values based on the loaded config
+    return (
+        config.get('dropdown-1', 'opt1'),
+        config.get('dropdown-2', 'opt1'),
+        config.get('dropdown-3', 'opt1'),
+        config.get('dropdown-4', 'opt1'),
+        config.get('dropdown-5', 'opt1'),
+        int(config.get('slider-1', 50)),
+        int(config.get('slider-2', 50)),
+        int(config.get('slider-3', 50)),
+        int(config.get('slider-4', 50)),
+        int(config.get('slider-5', 50)),
+        image_src  # Set the image source
+    )
+
+# Run the app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run_server(debug=True)

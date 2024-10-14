@@ -1,0 +1,11 @@
+# Konfiguration für Thermal
+dropdown-1=opt1
+dropdown-2=opt2
+dropdown-3=opt2
+dropdown-4=opt3
+dropdown-5=opt1
+slider-1=20
+slider-2=40
+slider-3=60
+slider-4=50
+slider-5=70

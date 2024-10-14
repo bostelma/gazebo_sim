@@ -1,0 +1,11 @@
+# Konfiguration für RGB
+dropdown-1=opt2
+dropdown-2=opt3
+dropdown-3=opt1
+dropdown-4=opt1
+dropdown-5=opt2
+slider-1=75
+slider-2=60
+slider-3=90
+slider-4=30
+slider-5=80
