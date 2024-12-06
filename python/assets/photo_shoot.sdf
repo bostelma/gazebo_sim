@@ -1,0 +1,281 @@
+<sdf version='1.10'>
+  <world name='example_photo_shoot_world'>
+    <gravity>0 0 -9.8000000000000007</gravity>
+    <magnetic_field>5.5644999999999998e-06 2.2875799999999999e-05 -4.2388400000000002e-05</magnetic_field>
+    <wind>
+      <linear_velocity>0 0 0</linear_velocity>
+    </wind>
+    <physics name='1ms' default='false' type='ignored'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <max_contacts>20</max_contacts>
+    </physics>
+    <model name='photo_shoot'>
+      <static>false</static>
+      <self_collide>false</self_collide>
+      <allow_auto_disable>true</allow_auto_disable>
+      <enable_wind>false</enable_wind>
+      <pose>0 0 0 0 0 0</pose>
+      <link name='camera_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <enable_wind>false</enable_wind>
+        <sensor name='thermal_camera' type='thermal_camera'>
+          <pose>0 0 0 0 0 0</pose>
+          <topic>__default__</topic>
+          <update_rate>30</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <camera name='__default__'>
+            <pose>0 0 0 0 0 0</pose>
+            <horizontal_fov>0.87266500000000002</horizontal_fov>
+            <image>
+              <width>512</width>
+              <height>512</height>
+              <format>L_INT16</format>
+              <anti_aliasing>4</anti_aliasing>
+            </image>
+            <camera_info_topic>__default__</camera_info_topic>
+            <trigger_topic></trigger_topic>
+            <triggered>false</triggered>
+            <clip>
+              <near>1</near>
+              <far>250</far>
+            </clip>
+            <save enabled='false'>
+              <path>__default__</path>
+            </save>
+            <visibility_mask>4294967295</visibility_mask>
+            <noise>
+              <type>none</type>
+              <mean>0</mean>
+              <stddev>0</stddev>
+            </noise>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>0.5 0.5</center>
+            </distortion>
+            <lens>
+              <type>stereographic</type>
+              <scale_to_hfov>true</scale_to_hfov>
+              <cutoff_angle>1.5707963267948966</cutoff_angle>
+              <env_texture_size>256</env_texture_size>
+            </lens>
+            <optical_frame_id></optical_frame_id>
+          </camera>
+          <plugin name='gz::sim::systems::ThermalSensor' filename='gz-sim-thermal-sensor-system'/>
+        </sensor>
+        <sensor name='rgb_camera' type='camera'>
+          <pose>0 0 0 0 0 0</pose>
+          <topic>__default__</topic>
+          <update_rate>30</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <camera name='__default__'>
+            <pose>0 0 0 0 0 0</pose>
+            <horizontal_fov>0.87266500000000002</horizontal_fov>
+            <image>
+              <width>512</width>
+              <height>512</height>
+              <format>RGB_INT8</format>
+              <anti_aliasing>4</anti_aliasing>
+            </image>
+            <camera_info_topic>__default__</camera_info_topic>
+            <trigger_topic></trigger_topic>
+            <triggered>false</triggered>
+            <clip>
+              <near>1</near>
+              <far>250</far>
+            </clip>
+            <save enabled='false'>
+              <path>__default__</path>
+            </save>
+            <visibility_mask>4294967295</visibility_mask>
+            <noise>
+              <type>none</type>
+              <mean>0</mean>
+              <stddev>0</stddev>
+            </noise>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>0.5 0.5</center>
+            </distortion>
+            <lens>
+              <type>stereographic</type>
+              <scale_to_hfov>true</scale_to_hfov>
+              <cutoff_angle>1.5707963267948966</cutoff_angle>
+              <env_texture_size>256</env_texture_size>
+            </lens>
+            <optical_frame_id></optical_frame_id>
+          </camera>
+        </sensor>
+        <sensor name='depth_camera' type='depth_camera'>
+          <pose>0 0 0 0 0 0</pose>
+          <topic>__default__</topic>
+          <update_rate>30</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <camera name='__default__'>
+            <pose>0 0 0 0 0 0</pose>
+            <horizontal_fov>0.87266500000000002</horizontal_fov>
+            <image>
+              <width>512</width>
+              <height>512</height>
+              <format>RGB_INT8</format>
+              <anti_aliasing>4</anti_aliasing>
+            </image>
+            <camera_info_topic>__default__</camera_info_topic>
+            <trigger_topic></trigger_topic>
+            <triggered>false</triggered>
+            <clip>
+              <near>1</near>
+              <far>250</far>
+            </clip>
+            <save enabled='false'>
+              <path>__default__</path>
+            </save>
+            <visibility_mask>4294967295</visibility_mask>
+            <noise>
+              <type>none</type>
+              <mean>0</mean>
+              <stddev>0</stddev>
+            </noise>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>0.5 0.5</center>
+            </distortion>
+            <lens>
+              <type>stereographic</type>
+              <scale_to_hfov>true</scale_to_hfov>
+              <cutoff_angle>1.5707963267948966</cutoff_angle>
+              <env_texture_size>256</env_texture_size>
+            </lens>
+            <optical_frame_id></optical_frame_id>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+    <light name='sun' type='directional'>
+      <visualize>false</visualize>
+      <pose>0 0 100 0 0 0</pose>
+      <cast_shadows>true</cast_shadows>
+      <intensity>1</intensity>
+      <direction>0.5 0.5 -0.90000000000000002</direction>
+      <diffuse>0.800000012 0.800000012 0.800000012 1</diffuse>
+      <specular>0.200000003 0.200000003 0.200000003 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <linear>0.01</linear>
+        <constant>0.90000000000000002</constant>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+    <atmosphere type='adiabatic'>
+      <temperature>300</temperature>
+      <pressure>101325</pressure>
+      <temperature_gradient>0.10000000000000001</temperature_gradient>
+    </atmosphere>
+    <scene>
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <background>0.25 0.25 0.25 1</background>
+      <grid>true</grid>
+      <origin_visual>true</origin_visual>
+      <shadows>true</shadows>
+    </scene>
+    <plugin name='gz::sim::systems::UserCommands' filename='gz-sim-user-commands-system'/>
+    <plugin name='gz::sim::systems::Sensors' filename='gz-sim-sensors-system'>
+      <render_engine>ogre2</render_engine>
+      <background_color>1, 1, 1</background_color>
+    </plugin>
+    <plugin name='gz::sim::systems::SceneBroadcaster' filename='gz-sim-scene-broadcaster-system'/>
+    <plugin name='Person' filename='Person'>
+      <model_name>person</model_name>
+      <model_pose>sitting</model_pose>
+      <pose>0 0 0 0 0 0</pose>
+      <poses>
+        <pose>0 0 0 0 0 0</pose>
+      </poses>
+      <scale>0.02</scale>
+      <temperature>307</temperature>
+    </plugin>
+    <plugin name='PhotoShoot' filename='PhotoShoot'>
+      <depth_offset>0.0</depth_offset>
+      <depth_scale>100.0</depth_scale>
+      <direct_thermal_factor>64</direct_thermal_factor>
+      <directory>assets</directory>
+      <indirect_thermal_factor>5.0</indirect_thermal_factor>
+      <lower_thermal_threshold>285</lower_thermal_threshold>
+      <poses>
+        <pose>0 0 35 0 1.57 0</pose>
+      </poses>
+      <save_depth>True</save_depth>
+      <save_rgb>True</save_rgb>
+      <save_thermal>True</save_thermal>
+      <upper_thermal_threshold>330</upper_thermal_threshold>
+    </plugin>
+    <plugin name='Forest' filename='Forest'>
+      <direct_spawning>True</direct_spawning>
+      <generate>True</generate>
+      <ground_temperature>288.15</ground_temperature>
+      <ground_texture>0</ground_texture>
+      <model_name>procedural-forest</model_name>
+      <seed>100</seed>
+      <size>100</size>
+      <species name='Birch'>
+        <homogeneity>0.95</homogeneity>
+        <percentage>1.0</percentage>
+        <tree_properties>
+          <branch_factor>1.2</branch_factor>
+          <climb_rate>0.3</climb_rate>
+          <clump_max>0.1</clump_max>
+          <clump_min>0.2</clump_min>
+          <drop_amount>0</drop_amount>
+          <grow_amount>0.85</grow_amount>
+          <initial_branch_length>0.25</initial_branch_length>
+          <length_falloff_factor>0.2</length_falloff_factor>
+          <length_falloff_power>0.2</length_falloff_power>
+          <levels>3</levels>
+          <radius_falloff_rate>0.3</radius_falloff_rate>
+          <segments>4</segments>
+          <sweep_amount>0.3</sweep_amount>
+          <taper_rate>0.3</taper_rate>
+          <trunk_length>0.4</trunk_length>
+          <twig_scale>0.25</twig_scale>
+          <twist_rate>5.5</twist_rate>
+          <v_multiplier>0.2</v_multiplier>
+        </tree_properties>
+        <trunk_texture>0</trunk_texture>
+        <twigs_texture>0</twigs_texture>
+      </species>
+      <texture_size>10</texture_size>
+      <trees>200</trees>
+      <trunk_temperature>291.15</trunk_temperature>
+      <twigs_temperature>287.15</twigs_temperature>
+    </plugin>
+  </world>
+</sdf>

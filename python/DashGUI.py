@@ -14,8 +14,7 @@ from launcher import Launcher
 # Initialize Dash App
 app = dash.Dash(__name__)
 
-# Layout of the App
-app.layout = html.Div([
+layout_1 = html.Div([
     dcc.Store(id='last-button-clicked', data='rgb'),  # Default to 'rgb'
     dcc.Store(id='apply-store'),
     # Left column with image and buttons
@@ -33,7 +32,7 @@ app.layout = html.Div([
                     html.Img(
                         id='image-display', 
                         src="/assets/pose_0_rgb.png",  # Default image (RGB)
-                        style={'width': '100%', 'height': 'auto'}
+                        style={'width': '100%', 'height': 'auto'},
                     ),
                     # Add buttons
                     html.Div(
@@ -69,7 +68,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-1', min=0, max=1, step=0.05, value=0.45, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -77,7 +77,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-2', min=0, max=1, step=0.05, value=0.4, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -85,7 +86,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-3', min=0, max=1, step=0.05, value=0.65, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -93,7 +95,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-4', min=0, max=1, step=0.05, value=0.75, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -101,7 +104,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-5', min=0, max=5, step=0.05, value=2.45, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -109,7 +113,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-6', min=0, max=1, step=0.05, value=0.7, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -117,7 +122,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-7', min=0, max=1, step=0.05, value=0.55, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -125,7 +131,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-8', min=0, max=1, step=0.05, value=0.8, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -133,7 +140,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-9', min=0, max=10, step=0.5, value=8.0, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -141,7 +149,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-10', min=0, max=10, step=1, value=6, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -149,7 +158,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-11', min=0, max=10, step=1, value=6, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -157,7 +167,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-12', min=0, max=1, step=0.05, value=0.0, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -165,7 +176,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-13', min=0, max=1, step=0.05, value=0.7, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -173,7 +185,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-14', min=0, max=1, step=0.05, value=1, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -181,7 +194,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-15', min=0, max=1, step=0.05, value=0.0, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -189,7 +203,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-16', min=0, max=1, step=0.05, value=0.4, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -197,7 +212,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-17', min=0, max=1, step=0.05, value=0.2, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ]),
                 html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
@@ -205,7 +221,8 @@ app.layout = html.Div([
                     html.Div(style={'width': '80%'}, children=[
                         dcc.Slider(id='slider-18', min=0, max=1, step=0.05, value=0.2, 
                                    marks={i: str(i) for i in range(0, 101, 20)},
-                                   tooltip={"placement": "bottom", "always_visible": True})
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
                     ])
                 ])
             ]),
@@ -220,17 +237,216 @@ app.layout = html.Div([
     )
 ])
 
-# Function to read config from files
-def read_config(file_name):
-    config = {}
-    file_path = os.path.join('assets', file_name)  # Update the path to include 'assets/'
-    with open(file_path, 'r') as file:
-        for line in file:
-            if line.startswith('#') or line.strip() == '':
-                continue  # Skip comments and empty lines
-            key, value = line.strip().split('=')
-            config[key] = value
-    return config
+layout_2 = html.Div([
+    dcc.Store(id='last-button-clicked', data='rgb'),  # Default to 'rgb'
+    dcc.Store(id='apply-store'),
+    # Left column with image and buttons
+    html.Div(
+        style={
+            'width': '45%', 'display': 'inline-block', 'vertical-align': 'top', 
+            'padding': '10px', 'border-right': '2px solid black', 'position': 'relative'
+        },
+        children=[
+            # Container for image
+            html.Div(
+                style={'position': 'relative', 'width': '100%', 'height': 'auto'},
+                children=[
+                    # Insert image
+                    html.Img(
+                        id='image-display', 
+                        src="/assets/pose_0_.png",  # Default image (RGB)
+                        style={'width': '100%', 'height': 'auto'},
+                    ),
+                ]
+            )
+        ]
+    ),
+    
+    # Right column with dropdowns and sliders
+    html.Div(
+        style={
+            'width': '45%', 'display': 'inline-block', 'vertical-align': 'top', 
+            'padding': '10px'
+        },
+        children=[
+            # Sliders
+            html.Div(id='sliders-container', children=[
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('clump_max', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-1', min=0, max=1, step=0.05, value=0.45, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('clump_min', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-2', min=0, max=1, step=0.05, value=0.4, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('length_falloff_factor', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-3', min=0, max=1, step=0.05, value=0.65, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('length_falloff_power', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-4', min=0, max=1, step=0.05, value=0.75, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('branch factor', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-5', min=0, max=5, step=0.05, value=2.45, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('radius_falloff_rate', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-6', min=0, max=1, step=0.05, value=0.7, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('climb_rate', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-7', min=0, max=1, step=0.05, value=0.55, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('taper_rate', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-8', min=0, max=1, step=0.05, value=0.8, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('twist_rate', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-9', min=0, max=10, step=0.5, value=8.0, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('segments', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-10', min=0, max=10, step=1, value=6, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('levels', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-11', min=0, max=10, step=1, value=6, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('sweep_amount', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-12', min=0, max=1, step=0.05, value=0.0, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('initial_branch_length', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-13', min=0, max=1, step=0.05, value=0.7, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('trunk_length', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-14', min=0, max=1, step=0.05, value=1, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('drop_amount', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-15', min=0, max=1, step=0.05, value=0.0, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('grow_amount', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-16', min=0, max=1, step=0.05, value=0.4, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('v_multiplier', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-17', min=0, max=1, step=0.05, value=0.2, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ]),
+                html.Div(style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}, children=[
+                    html.Label('twig_scale', style={'width': '150px'}),
+                    html.Div(style={'width': '80%'}, children=[
+                        dcc.Slider(id='slider-18', min=0, max=1, step=0.05, value=0.2, 
+                                   marks={i: str(i) for i in range(0, 101, 20)},
+                                   tooltip={"placement": "bottom", "always_visible": True},
+                                   persistence=True)
+                    ])
+                ])
+            ]),
+            # Apply Button
+            html.Div(
+                style={'text-align': 'center', 'margin-top': '20px'},
+                children=[
+                    html.Button('Apply', id='button-apply', n_clicks=0)
+                ]
+            )
+        ]
+    )
+])
+
+# Layout of the App
+app.layout = layout_1
 
 # Callbacks for button clicks to load configs
 @app.callback(
@@ -284,7 +500,7 @@ def on_apply_button_click(n_clicks, slider1, slider2, slider3, slider4, slider5,
     if n_clicks is None or n_clicks == 0:
         return dash.no_update
     world_file_in = "../worlds/example_photo_shoot.sdf"
-    world_file_out = "../../photo_shoot.sdf"
+    world_file_out = "assets/photo_shoot.sdf"
     output_directory = "assets"
 
     world_config = WorldConfig()
