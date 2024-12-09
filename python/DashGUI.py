@@ -17,14 +17,12 @@ app = dash.Dash(__name__)
 layout_1 = html.Div([
     dcc.Store(id='last-button-clicked', data='rgb'),  # Default to 'rgb'
     dcc.Store(id='apply-store'),
-    # Left column with image and buttons
     html.Div(
         style={
             'width': '45%', 'display': 'inline-block', 'vertical-align': 'top', 
             'padding': '10px', 'border-right': '2px solid black', 'position': 'relative'
         },
         children=[
-            # Container for image
             html.Div(
                 style={'position': 'relative', 'width': '100%', 'height': 'auto'},
                 children=[
@@ -446,7 +444,45 @@ layout_2 = html.Div([
 ])
 
 # Layout of the App
-app.layout = layout_1
+app.layout = html.Div([
+    dcc.Store(id='current-layout', data='layout_1'),
+    html.Div(
+        style={'text-align': 'center', 'margin-bottom': '20px'},
+        children=[
+            html.Button('Forest Config', id='button-layout-1', n_clicks=0),
+            html.Button('Thermal Config', id='button-layout-2', n_clicks=0)
+        ]
+    ),
+    html.Div(id='layout-container')
+])
+@app.callback(
+    Output('layout-container', 'children'),
+    Input('current-layout', 'data')
+)
+def update_layout(layout):
+    if layout == 'layout_1':
+        return layout_1
+    elif layout == 'layout_2':
+        return layout_2
+    return dash.no_update
+
+@app.callback(
+    Output('current-layout', 'data'),
+    Input('button-layout-1', 'n_clicks'),
+    Input('button-layout-2', 'n_clicks')
+)
+def update_layout(n_layout_1, n_layout_2):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    if button_id == 'button-layout-1':
+        return 'layout_1'
+    elif button_id == 'button-layout-2':
+        return 'layout_2'
+    
+    return dash.no_update
 
 # Callbacks for button clicks to load configs
 @app.callback(
