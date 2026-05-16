@@ -22,7 +22,11 @@ From: ubuntu:22.04
 	conda init
 
 	# create the conda environment and install packages
-	conda create -n gz-ws python=3.7.9
+	conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+	conda activate base
+	conda install conda-build
+	conda create -yes -n gz-ws python=3.7.9
 	conda activate gz-ws
 	conda install protobuf=3.20.3
 	conda install conda-build
